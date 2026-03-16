@@ -1,0 +1,160 @@
+﻿@model IEnumerable<Concert.Models.Venue>
+
+@{
+    ViewData["Title"] = "Локації";
+    var maxCapacity = Model.Any() ? Model.Max(v => ((v.TotalRows ?? 0) * (v.TotalSeats ?? 0)) + (v.Capacity ?? 0)) : 1000;
+    maxCapacity = (int)Math.Ceiling(maxCapacity / 100.0) * 100;
+}
+
+<style>
+    @@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;700;900&display=swap');
+
+    body {
+        background-color: #040721;
+        color: white;
+        font-family: 'Montserrat', sans-serif;
+    }
+
+    .page-title {
+        font-size: clamp(1.8rem, 4vw, 3rem);
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 5px;
+        text-shadow: 0 0 20px rgba(255,255,255,0.2);
+    }
+
+    .venue-card {
+        background: rgba(30, 41, 59, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 1.5rem;
+        transition: all 0.3s ease;
+        overflow: hidden;
+        margin-bottom: 25px;
+        backdrop-filter: blur(10px);
+    }
+
+        .venue-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(255, 255, 255, 0.3);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+            background: rgba(30, 41, 59, 0.9);
+        }
+
+    .venue-img-container {
+        width: 100%;
+        flex-shrink: 0;
+        overflow: hidden;
+        display: flex;
+    }
+
+    @@media (min-width: 768px) {
+        .venue-img-container {
+            width: 300px;
+        }
+    }
+
+    .venue-img {
+        width: 100%;
+        height: 100%;
+        min-height: 240px;
+        object-fit: cover;
+        transition: transform 0.5s ease;
+    }
+
+    .venue-card:hover .venue-img {
+        transform: scale(1.1);
+    }
+
+    .capacity-badge {
+        display: inline-block;
+        padding: 5px 15px;
+        background: rgba(212, 163, 115, 0.2);
+        color: #d4a373;
+        border-radius: 50px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .venue-stat {
+        font-size: 0.8rem;
+        color: rgba(255,255,255,0.5);
+    }
+
+        .venue-stat strong {
+            color: white;
+        }
+</style>
+
+<div class="container py-5 mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <h1 class="page-title mb-0">Локації</h1>
+        <a asp-action="Create" class="btn btn-outline-light text-uppercase" style="letter-spacing: 2px;">
+            + Додати локацію
+        </a>
+    </div>
+
+    <div class="row mb-5 align-items-center">
+        <div class="col-md-4 mb-3 mb-md-0">
+            <input type="text" id="liveSearch" class="form-control bg-transparent text-white border-secondary shadow-none" placeholder="Пошук за назвою або адресою..." autocomplete="off" style="border-radius: 10px;">
+        </div>
+        
+        <div class="col-md-5">
+            <label for="capacityFilter" class="text-white-50 mb-1" style="font-size: 0.85rem;">
+                Мінімальна місткість: <span id="capacityValue" class="text-white fw-bold ms-1">Будь-яка</span>
+            </label>
+            <input type="range" id="capacityFilter" class="form-range" min="0" max="@maxCapacity" step="50" value="0">
+        </div>
+    </div>
+
+    <div class="row">
+        @foreach (var item in Model)
+        {
+            var rows = item.TotalRows ?? 0;
+            var seatsPerRow = item.TotalSeats ?? 0;
+            var standing = item.Capacity ?? 0;
+
+            var totalSeated = rows * seatsPerRow;
+            var totalCapacity = totalSeated + standing;
+
+            <div class="col-12 search-item" data-search="@item.Name @item.Address" data-capacity="@totalCapacity">
+        
+                <div class="venue-card d-flex flex-column flex-md-row align-items-stretch">
+
+                    <div class="venue-img-container">
+                        <img src="@Url.Content(!string.IsNullOrEmpty(item.ImageUrl) ? item.ImageUrl : "/images/default-venue.jpg")"
+                             class="venue-img" alt="@item.Name"
+                             onerror="this.src='/images/default-venue.jpg';">
+                    </div>
+
+                    <div class="p-4 flex-grow-1 d-flex flex-column">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h3 class="fw-bold text-uppercase mb-0" style="letter-spacing: 2px;">@item.Name</h3>
+                            <span class="capacity-badge">Місткість: @totalCapacity</span>
+                        </div>
+
+                        <p class="text-white-50 mb-4"><i class="bi bi-geo-alt"></i> @item.Address</p>
+
+                        <div class="mt-auto d-flex flex-wrap gap-4">
+                            <div class="venue-stat">Рядiв: <strong>@rows</strong></div>
+                            <div class="venue-stat">Місць у ряду: <strong>@seatsPerRow</strong></div>
+                            <div class="venue-stat">Всього сидячих: <strong>@totalSeated</strong></div>
+                            <div class="venue-stat">Стоячих: <strong>@standing</strong></div>
+                        </div>
+                    </div>
+
+                    <div class="p-4 d-flex flex-column gap-2 border-start border-secondary border-opacity-25" style="min-width: 180px; background: rgba(0,0,0,0.1);">
+                        <a asp-action="Details" asp-route-id="@item.VenueId" class="btn btn-sm btn-outline-light text-uppercase w-100" style="font-size: 0.7rem;">Деталі</a>
+                        <a asp-action="Edit" asp-route-id="@item.VenueId" class="btn btn-sm btn-outline-secondary text-uppercase w-100" style="font-size: 0.7rem;">Редагувати</a>
+                        <a asp-action="Delete" asp-route-id="@item.VenueId" class="btn btn-sm btn-outline-danger text-uppercase w-100" style="font-size: 0.7rem;">Видалити</a>
+                    </div>
+
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+}

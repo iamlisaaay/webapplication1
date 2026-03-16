@@ -1,0 +1,366 @@
+﻿@model Concert.Models.Group
+
+@{
+    ViewData["Title"] = Model.Name;
+
+    string GetYouTubeId(string url)
+    {
+        if (string.IsNullOrEmpty(url)) return null;
+
+        if (url.Contains("v="))
+        {
+            return url.Split("v=")[1].Substring(0, 11);
+        }
+        else if (url.Contains("youtu.be/"))
+        {
+            return url.Split("youtu.be/")[1].Substring(0, 11);
+        }
+
+        return null;
+    }
+}
+
+<style>
+    @@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;700;900&display=swap');
+
+    /* === БАЗОВІ СТИЛІ === */
+    body {
+        background-color: #040721;
+        color: white;
+        margin: 0;
+        font-family: 'Montserrat', sans-serif;
+    }
+
+    /* === ГОЛОВНИЙ ЕКРАН ТА ВІДЕО === */
+    .group-hero {
+        position: relative;
+        height: 100vh;
+        width: 100%;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        background: radial-gradient(circle, #1a2044 0%, #040721 80%);
+    }
+
+    .hero-content {
+        position: relative;
+        z-index: 2;
+    }
+
+    .youtube-bg-container {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        z-index: 0;
+    }
+
+        .youtube-bg-container::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+        }
+
+    .youtube-bg-iframe {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 100vw;
+        height: 56.25vw;
+        min-height: 100vh;
+        min-width: 177.77vh;
+        transform: translate(-50%, -50%);
+        pointer-events: none;
+        filter: brightness(0.4);
+    }
+
+    /* === НАВІГАЦІЯ ТА ЛОГОТИП === */
+    .group-nav-container {
+        position: absolute;
+        top: 40px;
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .nav-side {
+        display: flex;
+        gap: 30px;
+        text-transform: uppercase;
+        font-size: 0.8rem;
+        letter-spacing: 2px;
+        font-weight: 300;
+    }
+
+        .nav-side a {
+            color: white;
+            text-decoration: none;
+            opacity: 0.7;
+            transition: 0.3s;
+        }
+
+            .nav-side a:hover {
+                opacity: 1;
+                text-shadow: 0 0 8px white;
+            }
+
+    .center-logo {
+        width: 200px;
+        margin: 0 50px;
+    }
+
+    /* === БІОГРАФІЯ ТА ТЕКСТИ === */
+    .group-main-title {
+        font-size: clamp(3rem, 10vw, 6rem);
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 10px;
+        text-align: center;
+        text-shadow: 0 0 20px rgba(255,255,255,0.3);
+    }
+
+    .bio-text {
+        max-width: 800px;
+        margin: 80px auto;
+        text-align: center;
+        font-weight: 300;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        line-height: 2;
+        padding: 0 20px;
+    }
+
+    /* === УЧАСНИКИ === */
+    .members-separator {
+        border-top: 1px solid rgba(255, 255, 255, 0.15);
+        margin: 60px auto;
+        width: 95%;
+    }
+
+    .members-title {
+        font-family: monospace, sans-serif;
+        letter-spacing: 4px;
+        font-size: 1.2rem;
+        margin-bottom: 50px;
+    }
+
+    .members-grid {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 30px;
+        padding: 0 15px;
+    }
+
+    .member-card {
+        width: 220px;
+        text-align: left;
+    }
+
+    .member-portrait {
+        width: 100%;
+        height: 320px;
+        object-fit: cover;
+        border: 2px solid rgba(255, 255, 255, 0.05);
+        padding: 5px;
+        background: rgba(0, 0, 0, 0.5);
+        filter: grayscale(100%) contrast(1.1);
+        transition: filter 0.4s ease;
+    }
+
+        .member-portrait:hover {
+            filter: grayscale(0%) contrast(1);
+        }
+
+    .member-name {
+        font-weight: 700;
+        font-size: 0.9rem;
+        margin-top: 15px;
+        margin-bottom: 2px;
+        letter-spacing: 1px;
+    }
+
+    .member-role {
+        color: #d4a373;
+        font-size: 0.8rem;
+        margin-bottom: 10px;
+    }
+
+    .member-insta {
+        color: white;
+        opacity: 0.6;
+        font-size: 0.8rem;
+        text-decoration: none;
+        transition: opacity 0.2s;
+    }
+
+        .member-insta:hover {
+            opacity: 1;
+            text-decoration: underline;
+        }
+
+    /* === КОНЦЕРТИ (РАМКА ТА КАРТКИ) === */
+    .holographic-card {
+        perspective: 1000px;
+        height: 100%;
+    }
+
+    .holographic-card__inner {
+        will-change: transform;
+        transition: transform 0.1s ease-out, box-shadow 0.3s ease;
+        transform-style: preserve-3d;
+        background: #1e293b;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 1.5rem;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3); /* Додано базову тінь */
+    }
+
+    /* Додано ефект світіння при наведенні, як на інших сторінках */
+    .holographic-card:hover .holographic-card__inner {
+        box-shadow: 0 15px 35px rgba(255, 255, 255, 0.1);
+        border-color: rgba(255, 255, 255, 0.3);
+    }
+
+    .card-title {
+        color: #f8fafc !important;
+        font-size: 1.25rem;
+    }
+
+    .text-muted {
+        color: #94a3b8 !important;
+    }
+
+    .card-content {
+        pointer-events: none;
+    }
+</style>
+
+<div class="group-hero">
+    @if (!string.IsNullOrEmpty(Model.BgVideoUrl))
+    {
+        var youtubeId = GetYouTubeId(Model.BgVideoUrl);
+
+        if (youtubeId != null)
+        {
+            <div class="youtube-bg-container">
+                <iframe class="youtube-bg-iframe"
+                        src="https://www.youtube.com/embed/@(youtubeId)?autoplay=1&mute=1&controls=0&loop=1&playlist=@(youtubeId)&rel=0&showinfo=0&modestbranding=1&iv_load_policy=3&disablekb=1"
+                        frameborder="0"
+                        allow="autoplay; encrypted-media"
+                        tabindex="-1">
+                </iframe>
+            </div>
+        }
+    }
+
+    <div class="group-nav-container hero-content">
+        <div class="nav-side">
+            <a href="#about">About</a>
+            <a href="#contact">Contact</a>
+        </div>
+        @if (!string.IsNullOrEmpty(Model.LogoUrl))
+        {
+            <img src="@Url.Content(Model.LogoUrl)" class="center-logo" alt="Logo">
+        }
+        <div class="nav-side">
+            <a href="#schedule">Schedule</a>
+            <a href="@Model.FanClubUrl" target="_blank">Fan Club</a>
+        </div>
+    </div>
+
+    <div class="text-center hero-content">
+        <h2 class="opacity-50 mb-2" style="font-size: 0.7rem; letter-spacing: 5px; font-weight: 300;">OFFICIAL PAGE</h2>
+        <h1 class="group-main-title">@Model.Name</h1>
+    </div>
+</div>
+
+<div id="about" class="bio-section">
+    <p class="bio-text">@Model.Description</p>
+</div>
+
+<div class="members-separator"></div>
+
+<div id="members" class="container pb-5">
+    <h3 class="text-center text-uppercase text-white members-title">
+        @Model.Name MEMBERS
+    </h3>
+
+    <div class="members-grid">
+        @foreach (var member in Model.Members)
+        {
+            <div class="member-card">
+                <img src="@(!string.IsNullOrEmpty(member.ImageUrl) ? Url.Content(member.ImageUrl) : "/images/default-member.jpg")"
+                     class="member-portrait"
+                     alt="@member.FullName">
+
+                <div class="member-name">@member.FullName</div>
+
+                <div class="member-role">
+                    @(member.RoleNavigation != null ? member.RoleNavigation.RoleName : "Учасник")
+                </div>
+
+                @if (!string.IsNullOrEmpty(member.InstagramUrl))
+                {
+                    <a href="@member.InstagramUrl" target="_blank" class="member-insta">official_insta</a>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+<div id="schedule" class="container py-5">
+    <h3 class="text-center mb-5 text-uppercase fw-bold" style="letter-spacing: 5px; font-weight: 700; font-size: 1.5rem;">Upcoming Shows</h3>
+    <div class="row px-3">
+        @foreach (var concert in Model.Concerts.Where(c => c.DateTime >= DateTime.UtcNow).OrderBy(c => c.DateTime))
+        {
+            <div class="col-lg-4 col-md-6 mb-5">
+                <div class="holographic-card">
+                    <div class="holographic-card__inner shadow-lg h-100">
+
+                        <div style="height: 250px; overflow: hidden; position: relative; flex-shrink: 0;">
+                            <img src="@Url.Content(concert.ImageUrl ?? "/images/default-concert.jpg")"
+                                 class="w-100 h-100"
+                                 alt="Poster"
+                                 style="object-fit: cover;"
+                                 onerror="this.src='/images/default-concert.jpg';">
+                        </div>
+
+                        <div class="card-body p-4 card-content flex-grow-1">
+                            <h5 class="card-title fw-bold mb-2">@concert.Title</h5>
+                            <p class="mb-1 text-muted">
+                                📅 @concert.DateTime?.ToString("dd.MM.yyyy HH:mm")
+                            </p>
+                            <p class="mb-0 text-muted">
+                                📍 <strong>@concert.Venue?.Name</strong>
+                            </p>
+                        </div>
+
+                        <div class="p-4 pt-0 mt-auto">
+                            <div class="d-grid gap-2">
+                                <a asp-controller="Concerts" asp-action="Details" asp-route-id="@concert.ConcertId"
+                                   class="btn btn-outline-light btn-sm py-2 text-uppercase" style="letter-spacing: 1px;">
+                                    Детальніше
+                                </a>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+
+}

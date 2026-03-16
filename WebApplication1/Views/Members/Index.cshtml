@@ -1,0 +1,162 @@
+﻿@model IEnumerable<Concert.Models.Member>
+
+@{
+    ViewData["Title"] = "Учасники";
+}
+
+<style>
+    @@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;700;900&display=swap');
+
+    body {
+        background-color: #040721;
+        color: white;
+        font-family: 'Montserrat', sans-serif;
+    }
+
+    .page-title {
+        font-size: clamp(1.8rem, 4vw, 3rem);
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 5px;
+        text-shadow: 0 0 20px rgba(255,255,255,0.2);
+    }
+
+    .holographic-card {
+        perspective: 1000px;
+        height: 100%;
+    }
+
+    .holographic-card__inner {
+        will-change: transform;
+        transition: transform 0.1s ease-out, box-shadow 0.3s ease;
+        transform-style: preserve-3d;
+        background: rgba(30, 41, 59, 0.8);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 1rem;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    /* === ОПТИМІЗАЦІЯ ПОРТРЕТІВ === */
+    .portrait-container {
+        position: relative;
+        height: 220px; /* Збільшили висоту для кращого кадрування */
+        overflow: hidden;
+        flex-shrink: 0;
+    }
+
+        /* Градієнтна віньєтка для плавного переходу */
+        .portrait-container::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 60%;
+            background: linear-gradient(to top, rgba(30, 41, 59, 1) 0%, transparent 100%);
+            z-index: 1;
+        }
+
+    .member-portrait {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center 20%; 
+        transition: transform 0.5s ease;
+    }
+
+    .holographic-card:hover .member-portrait {
+        transform: scale(1.08); 
+    }
+
+    .card-body {
+        position: relative;
+        z-index: 2;
+        margin-top: -20px; 
+    }
+
+    .action-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        position: relative;
+        z-index: 10;
+    }
+</style>
+
+<div class="container py-5 mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="page-title mb-0">Учасники</h1>
+        <a asp-action="Create" class="btn btn-outline-light text-uppercase" style="letter-spacing: 2px;">
+            + Додати
+        </a>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <input type="text" id="liveSearch" class="form-control bg-transparent text-white border-secondary shadow-none" placeholder="Пошук за ім'ям, роллю чи гуртом..." autocomplete="off" style="border-radius: 10px;">
+        </div>
+    </div>
+
+    <div class="row">
+        @foreach (var item in Model)
+        {
+            var groupNames = item.Groups != null ? string.Join(" ", item.Groups.Select(g => g.Name)) : "";
+
+            <div class="col-lg-2 col-md-3 col-sm-4 col-6 mb-4 search-item" data-search="@item.FullName @(item.RoleNavigation != null ? item.RoleNavigation.RoleName : "") @groupNames">
+                <div class="holographic-card">
+                    <div class="holographic-card__inner h-100">
+
+                        <div class="portrait-container">
+                            <img src="@Url.Content(!string.IsNullOrEmpty(item.ImageUrl) ? item.ImageUrl : "/images/default-member.jpg")"
+                                 alt="@item.FullName"
+                                 class="member-portrait"
+                                 onerror="this.src='/images/default-member.jpg';">
+                        </div>
+
+                        <div class="card-body p-3 card-content flex-grow-1 text-center">
+                            <h5 class="fw-bold mb-1 text-uppercase" style="font-size: 0.85rem; letter-spacing: 1px;">
+                                @item.FullName
+                            </h5>
+
+                            <p class="mb-2 text-uppercase" style="color: #d4a373; font-size: 0.65rem; font-weight: 700;">
+                                @(item.RoleNavigation != null ? item.RoleNavigation.RoleName : "Учасник")
+                            </p>
+
+                            <div class="mt-auto">
+                                <p class="mb-0 text-white-50" style="font-size: 0.6rem; line-height: 1.4;">
+                                    @if (item.Groups != null && item.Groups.Any())
+                                    {
+                                        <strong class="text-white opacity-75">Гурти:</strong>
+                                
+                                        <br />
+                                        @string.Join(", ", item.Groups.Select(g => g.Name))
+                                    }
+                                    else
+                                    {
+                                        <span class="fst-italic opacity-50">Немає гуртів</span>
+                                    }
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="p-2 pt-0 mt-auto action-buttons">
+                            <div class="d-flex gap-1">
+                                <a asp-action="Edit" asp-route-id="@item.MemberId" class="btn btn-sm btn-outline-light w-50 text-uppercase opacity-75 px-1 py-1" style="font-size: 0.6rem;">Ред.</a>
+                                <a asp-action="Details" asp-route-id="@item.MemberId" class="btn btn-sm btn-outline-light w-50 text-uppercase opacity-75 px-1 py-1" style="font-size: 0.6rem;">Дет.</a>
+                            </div>
+                            <a asp-action="Delete" asp-route-id="@item.MemberId" class="btn btn-sm btn-outline-light w-100 text-uppercase opacity-75 px-1 py-1" style="font-size: 0.6rem;">Видалити</a>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+
+}

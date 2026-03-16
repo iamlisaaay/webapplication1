@@ -1,0 +1,63 @@
+﻿@model Concert.Models.Group
+
+@{
+    ViewData["Title"] = "Видалення гурту";
+}
+
+<style>
+    body {
+        background-color: #040721;
+        color: white;
+        font-family: 'Montserrat', sans-serif;
+    }
+
+    .delete-container {
+        max-width: 600px;
+        margin: 100px auto;
+        padding: 40px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(239, 68, 68, 0.3); /* Червонувата рамка як сигнал небезпеки */
+        border-radius: 2rem;
+        text-align: center;
+        box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+    }
+
+    .warning-icon {
+        font-size: 4rem;
+        color: #ef4444;
+        margin-bottom: 20px;
+    }
+
+    .group-preview-img {
+        width: 150px;
+        height: 150px;
+        object-fit: cover;
+        border-radius: 50%;
+        border: 3px solid #ef4444;
+        margin-bottom: 20px;
+    }
+</style>
+
+<div class="container">
+    <div class="delete-container">
+        <div class="warning-icon">⚠️</div>
+        <h1 class="fw-bold text-uppercase mb-4" style="letter-spacing: 3px;">Видалити гурт?</h1>
+
+        <img src="@Url.Content(!string.IsNullOrEmpty(Model.VideoUrl) ? Model.VideoUrl : "/images/default-group.jpg")"
+             class="group-preview-img" alt="Preview">
+
+        <h3 class="text-white mb-2">@Model.Name</h3>
+        <p class="text-white-50 mb-5">
+            Увага! Ця дія видалить гурт з усіх концертів. <br />
+            Це неможливо буде скасувати.
+        </p>
+
+        <form asp-action="Delete">
+            <input type="hidden" asp-for="GroupId" />
+            <div class="d-flex gap-3 justify-content-center">
+                <a asp-action="Index" class="btn btn-outline-light px-4 py-2 text-uppercase" style="letter-spacing: 1px;">Скасувати</a>
+                <button type="submit" class="btn btn-danger px-4 py-2 text-uppercase fw-bold" style="letter-spacing: 1px; background-color: #ef4444;">Так, видалити</button>
+            </div>
+        </form>
+    </div>
+</div>

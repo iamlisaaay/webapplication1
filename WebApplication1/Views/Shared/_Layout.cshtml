@@ -1,0 +1,107 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - ConcertApp</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/WebApplication1.styles.css" asp-append-version="true" />
+    @* Додаємо шрифт Montserrat сюди, щоб він працював скрізь *@
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;700;900&display=swap" rel="stylesheet">
+
+    <style>
+        /* Стилізація навбару під твій дизайн */
+        .custom-navbar {
+            background-color: #040721 !important;
+            font-family: 'Montserrat', sans-serif;
+            border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+        }
+
+            .custom-navbar .nav-link, .custom-navbar .navbar-brand {
+                color: white !important;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+                font-size: 0.8rem;
+            }
+
+                .custom-navbar .nav-link:hover {
+                    color: #60a5fa !important;
+                }
+    </style>
+</head>
+<body>
+    <header>
+        @* Змінили класи navbar-light та bg-white на наші кастомні *@
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-dark custom-navbar box-shadow">
+            <div class="container-fluid">
+                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">ConcertApp</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
+                        aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+                    <ul class="navbar-nav flex-grow-1">
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Home" asp-action="Index">Головна</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Concerts" asp-action="Index">Концерти</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Customers" asp-action="Index">Клієнти</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Groups" asp-action="Index">Гурти</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Members" asp-action="Index">Учасники</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Roles" asp-action="Index">Ролі</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Tickets" asp-action="Index">Квитки</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Venues" asp-action="Index">Локації</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+
+    <main role="main">
+        @RenderBody()
+    </main>
+
+    <footer id="contact" class="border-top mt-5 py-5" style="background-color: #040721; border-color: rgba(255,255,255,0.05) !important;">
+        <div class="container text-center">
+            <h5 class="text-white mb-3" style="letter-spacing: 3px; font-weight: 300; text-transform: uppercase; font-size: 0.9rem;">
+                Contact Information
+            </h5>
+            <p class="mb-1 text-white-50" style="font-size: 0.9rem;">For booking and inquiries:</p>
+            <a href="mailto:official@myweb.com" class="text-info text-decoration-none" style="letter-spacing: 1px;">
+                official@myweb.com
+            </a>
+
+            <div class="mt-4 pt-4 border-top" style="border-color: rgba(255,255,255,0.05) !important;">
+                <div class="d-flex justify-content-center align-items-center gap-3 text-white-50" style="font-size: 0.75rem;">
+                    <span>&copy; 2026 ConcertApp. All rights reserved.</span>
+                    <span>|</span>
+                    <a asp-area="" asp-controller="Home" asp-action="Privacy" class="text-white-50 text-decoration-none">
+                        Privacy Policy
+                    </a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

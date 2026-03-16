@@ -1,0 +1,107 @@
+﻿@model Concert.Models.Member
+
+@{
+    ViewData["Title"] = "Видалення учасника";
+}
+
+<style>
+    body {
+        background-color: #040721;
+        color: white;
+        font-family: 'Montserrat', sans-serif;
+    }
+
+    .delete-container {
+        max-width: 650px;
+        margin: 80px auto;
+        padding: 40px;
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+        border-radius: 2.5rem;
+        text-align: center;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(10px);
+    }
+
+    .member-avatar-container {
+        position: relative;
+        width: 180px;
+        height: 180px;
+        margin: 0 auto 25px;
+    }
+
+    .member-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 50%;
+        border: 4px solid #ef4444;
+        padding: 5px;
+    }
+
+    .status-badge {
+        position: absolute;
+        bottom: 10px;
+        right: 10px;
+        background: #ef4444;
+        color: white;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: bold;
+        text-transform: uppercase;
+    }
+
+    .danger-zone {
+        background: rgba(239, 68, 68, 0.1);
+        border-radius: 1rem;
+        padding: 20px;
+        margin: 25px 0;
+        border-left: 4px solid #ef4444;
+    }
+
+    .btn-delete {
+        background: #ef4444;
+        color: white;
+        border: none;
+        transition: all 0.3s;
+    }
+
+        .btn-delete:hover {
+            background: #dc2626;
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.4);
+        }
+</style>
+
+<div class="container">
+    <div class="delete-container">
+        <h1 class="fw-black text-uppercase mb-4" style="letter-spacing: 3px; color: #ef4444;">Видалити профіль?</h1>
+
+        <div class="member-avatar-container">
+            <img src="@Url.Content(!string.IsNullOrEmpty(Model.ImageUrl) ? Model.ImageUrl : "/images/default-avatar.jpg")"
+                 class="member-img" alt="Member Photo">
+            <span class="status-badge">Видалення</span>
+        </div>
+
+        <h2 class="fw-bold mb-1">@Model.FullName</h2>
+        <p class="text-white-50">@Model.RoleNavigation?.RoleName</p>
+
+        <div class="danger-zone text-start">
+            <h5 class="text-danger fw-bold"><i class="bi bi-exclamation-triangle-fill"></i> Наслідки видалення:</h5>
+            <ul class="mb-0 text-white-50">
+                <li>Учасник буде видалений з <strong>усіх гуртів</strong>, до яких він належить.</li>
+                <li>Якщо він єдиний учасник у гурті — <strong>гурт також буде видалено</strong>.</li>
+                <li>Всі пов'язані дані в базі будуть очищені безповоротно.</li>
+            </ul>
+        </div>
+
+        <form asp-action="Delete">
+            <input type="hidden" asp-for="MemberId" />
+            <div class="d-flex gap-3 justify-content-center mt-4">
+                <a asp-action="Index" class="btn btn-outline-light px-4 py-2 text-uppercase" style="border-radius: 50px;">Скасувати</a>
+                <button type="submit" class="btn btn-delete px-4 py-2 text-uppercase fw-bold" style="border-radius: 50px;">Видалити назавжди</button>
+            </div>
+        </form>
+    </div>
+</div>

@@ -1,0 +1,150 @@
+﻿@model Concert.Models.Group
+
+@{
+    ViewData["Title"] = "Create";
+}
+
+<h1>Create</h1>
+
+<h4>Group</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Create">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-group">
+                <label asp-for="Name" class="control-label"></label>
+                <input asp-for="Name" class="form-control" />
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Description" class="control-label"></label>
+                <input asp-for="Description" class="form-control" />
+                <span asp-validation-for="Description" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="LogoUrl" class="control-label"></label>
+                <input asp-for="LogoUrl" class="form-control" />
+                <span asp-validation-for="LogoUrl" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="BgVideoUrl" class="control-label"></label>
+                <input asp-for="BgVideoUrl" class="form-control" />
+                <span asp-validation-for="BgVideoUrl" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="VideoUrl" class="control-label"></label>
+                <input asp-for="VideoUrl" class="form-control" />
+                <span asp-validation-for="VideoUrl" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="FanClubUrl" class="control-label"></label>
+                <input asp-for="FanClubUrl" class="form-control" />
+                <span asp-validation-for="FanClubUrl" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label class="control-label">Учасники гурту</label>
+                <div class="d-flex gap-2">
+                    <select name="selectedMembers" id="selectedMembers" class="form-control select2 w-100" multiple="multiple" asp-items="ViewBag.AllMembers"></select>
+
+                    <button type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#createMemberModal" title="Створити нового учасника">
+                        +
+                    </button>
+                </div>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Create" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+<div class="modal fade" id="createMemberModal" tabindex="-1" aria-labelledby="createMemberModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content bg-dark text-white" style="border: 1px solid rgba(255,255,255,0.1);">
+            <div class="modal-header border-bottom-0">
+                <h5 class="modal-title" id="createMemberModalLabel">Створити учасника</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="ajaxCreateMemberForm">
+                    <div class="form-group mb-3">
+                        <label class="control-label">Ім'я</label>
+                        <input type="text" name="FullName" class="form-control" required />
+                    </div>
+                    <div class="form-group mb-3">
+                        <label class="control-label">Роль</label>
+                        <select name="Role" class="form-control" asp-items="ViewBag.Roles" required></select>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label class="control-label">Фото (посилання)</label>
+                        <input type="text" name="ImageUrl" class="form-control" />
+                    </div>
+                    <div class="form-group mb-3">
+                        <label class="control-label">Instagram (посилання)</label>
+                        <input type="text" name="InstagramUrl" class="form-control" />
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer border-top-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Скасувати</button>
+                <button type="button" class="btn btn-primary" id="saveMemberBtn">Зберегти та додати</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            $('.select2').select2({
+                placeholder: "Почніть вводити ім'я учасника...",
+                allowClear: true
+            });
+           
+        $('#saveMemberBtn').click(function () {
+            var form = $('#ajaxCreateMemberForm');
+
+            if (!form[0].checkValidity()) {
+                form[0].reportValidity();
+                return;
+            }
+
+           
+            $.ajax({
+                type: "POST",
+                url: "/Members/CreateAjax",
+                data: form.serialize(), 
+                success: function (response) {
+                    if (response.success) {
+                        
+                        var newOption = new Option(response.name, response.id, true, true);
+
+                      
+                        $('#selectedMembers').append(newOption).trigger('change');
+
+                      
+                        $('#createMemberModal').modal('hide');
+                        form[0].reset();
+                    } else {
+                        alert(response.message);
+                    }
+                },
+                error: function () {
+                    alert("Сталася помилка при відправці даних на сервер.");
+                }
+            });
+        });
+        });
+    </script>
+}

@@ -1,0 +1,128 @@
+﻿@model IEnumerable<Concert.Models.Ticket>
+
+@{
+    ViewData["Title"] = "Квитки";
+}
+
+<style>
+    @@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;700;900&display=swap');
+
+    body {
+        background-color: #040721;
+        color: white;
+        font-family: 'Montserrat', sans-serif;
+    }
+
+    .page-title {
+        font-size: clamp(1.8rem, 4vw, 3rem);
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 5px;
+        text-shadow: 0 0 20px rgba(255,255,255,0.2);
+    }
+
+    .table-container {
+        background: rgba(30, 41, 59, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 1.5rem;
+        backdrop-filter: blur(10px);
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+
+    .custom-table {
+        width: 100%;
+        margin: 0;
+        color: white;
+    }
+
+        .custom-table thead {
+            background: rgba(0, 0, 0, 0.3);
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+        }
+
+        .custom-table th, .custom-table td {
+            padding: 1.2rem 1.5rem;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            vertical-align: middle;
+        }
+
+        .custom-table tbody tr {
+            transition: background 0.3s;
+        }
+
+            .custom-table tbody tr:hover {
+                background: rgba(255, 255, 255, 0.05);
+            }
+
+            .custom-table tbody tr:last-child td {
+                border-bottom: none;
+            }
+
+    .action-links a {
+        color: white;
+        opacity: 0.6;
+        text-decoration: none;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 1px;
+        margin-right: 15px;
+        transition: 0.3s;
+    }
+
+        .action-links a:hover {
+            opacity: 1;
+            text-shadow: 0 0 8px rgba(255,255,255,0.5);
+        }
+
+        .action-links a.text-danger {
+            color: #ef4444 !important;
+        }
+
+            .action-links a.text-danger:hover {
+                text-shadow: 0 0 8px rgba(239,68,68,0.5);
+            }
+</style>
+
+<div class="container py-5 mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <h1 class="page-title mb-0">Квитки</h1>
+        <a asp-action="Create" class="btn btn-outline-light text-uppercase" style="letter-spacing: 2px;">
+            + Продати квиток
+        </a>
+    </div>
+
+    <div class="table-container table-responsive">
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th>@Html.DisplayNameFor(model => model.Concert)</th>
+                    <th>@Html.DisplayNameFor(model => model.Customer)</th>
+                    <th>Ряд / Місце</th>
+                    <th>@Html.DisplayNameFor(model => model.Price)</th>
+                    <th>@Html.DisplayNameFor(model => model.Status)</th>
+                    <th class="text-end">Дії</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td class="fw-bold text-uppercase" style="font-size: 0.85rem; letter-spacing: 1px;">@Html.DisplayFor(modelItem => item.Concert.Title)</td>
+                        <td>@Html.DisplayFor(modelItem => item.Customer.FullName)</td>
+                        <td class="text-white-50">Ряд @Html.DisplayFor(modelItem => item.RNumber), Місце @Html.DisplayFor(modelItem => item.SeatNumber)</td>
+                        <td class="fw-bold" style="color: #d4a373;">@Html.DisplayFor(modelItem => item.Price) ₴</td>
+                        <td>@Html.DisplayFor(modelItem => item.Status)</td>
+                        <td class="text-end action-links">
+                            <a asp-action="Edit" asp-route-id="@item.TicketId">Ред</a>
+                            <a asp-action="Details" asp-route-id="@item.TicketId">Дет</a>
+                            <a asp-action="Delete" asp-route-id="@item.TicketId" class="text-danger">Вид</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

@@ -1,0 +1,157 @@
+﻿@model IEnumerable<Concert.Models.Concert>
+
+@{
+    ViewData["Title"] = "Концерти";
+}
+
+<style>
+    @@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;700;900&display=swap');
+
+    body {
+        background-color: #040721;
+        color: white;
+        font-family: 'Montserrat', sans-serif;
+    }
+
+    .page-title {
+        font-size: clamp(1.8rem, 4vw, 3rem);
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 5px;
+        text-shadow: 0 0 20px rgba(255,255,255,0.2);
+    }
+
+    /* === СТИЛІ 3D-КАРТОК === */
+    .holographic-card {
+        perspective: 1000px;
+        height: 100%;
+    }
+
+    .holographic-card__inner {
+        will-change: transform;
+        transition: transform 0.1s ease-out, box-shadow 0.3s ease;
+        transform-style: preserve-3d;
+        background: rgba(30, 41, 59, 0.8);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 1.5rem;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .holographic-card:hover .holographic-card__inner {
+        box-shadow: 0 15px 35px rgba(255, 255, 255, 0.1);
+        border-color: rgba(255, 255, 255, 0.3);
+    }
+
+    .card-content {
+        pointer-events: none;
+    }
+
+    /* === КНОПКИ === */
+    .action-buttons {
+        display: flex;
+        gap: 10px;
+        position: relative;
+        z-index: 10;
+    }
+</style>
+
+<div class="container py-5 mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <h1 class="page-title mb-0">Концерти</h1>
+        <a asp-action="Create" class="btn btn-outline-light text-uppercase" style="letter-spacing: 2px;">
+            + Додати концерт
+        </a>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <input type="text" id="liveSearch" class="form-control bg-transparent text-white border-secondary shadow-none" placeholder="Пошук за назвою, місцем, гуртом..." autocomplete="off" style="border-radius: 10px;">
+        </div>
+    </div>
+
+    <div class="row">
+        @foreach (var item in Model)
+        {
+            
+            var groupNames = item.Groups != null ? string.Join(" ", item.Groups.Select(g => g.Name)) : "";
+            var memberNames = item.Groups != null ? string.Join(" ", item.Groups.Where(g => g.Members != null).SelectMany(g => g.Members).Select(m => m.FullName)) : "";
+
+            <div class="col-lg-4 col-md-6 mb-5 search-item" data-search="@item.Title @(item.Venue?.Name) @groupNames @memberNames">
+
+                <div class="holographic-card">
+                    <div class="holographic-card__inner h-100">
+
+                        <div style="height: 250px; overflow: hidden; position: relative; flex-shrink: 0;">
+                            <img src="@Url.Content(!string.IsNullOrEmpty(item.ImageUrl) ? item.ImageUrl : "/images/default-concert.jpg")"
+                                 alt="@item.Title"
+                                 style="width: 100%; height: 100%; object-fit: cover;"
+                                 onerror="this.src='/images/default-concert.jpg';">
+                        </div>
+
+                        <div class="card-body p-4 card-content flex-grow-1">
+                            <h5 class="fw-bold mb-3 text-uppercase" style="letter-spacing: 3px; font-size: 1.1rem;">
+                                @item.Title
+                            </h5>
+
+                            <p class="mb-3 opacity-70" style="font-size: 0.85rem;">
+                                📅 @item.DateTime?.ToString("dd.MM.yyyy HH:mm") <br />
+                                📍 <strong>@item.Venue?.Name</strong>
+                            </p>
+
+                            <p class="mb-0 opacity-70" style="font-size: 0.85rem; line-height: 1.6;">
+                                <strong class="text-white opacity-100">Гурти:</strong><br />
+                                @if (item.Groups != null && item.Groups.Any())
+                                {
+                                    @string.Join(", ", item.Groups.Select(g => g.Name))
+                                }
+                                else
+                                {
+                                    <span class="fst-italic">Гурти ще не додані</span>
+                                }
+                            </p>
+                        </div>
+
+                        <div class="p-4 pt-0 mt-auto action-buttons">
+                            <a asp-action="Edit" asp-route-id="@item.ConcertId" class="btn btn-sm btn-outline-light w-100 text-uppercase opacity-75" style="letter-spacing: 1px;">Редагувати</a>
+                            <a asp-action="Details" asp-route-id="@item.ConcertId" class="btn btn-sm btn-outline-light w-100 text-uppercase opacity-75" style="letter-spacing: 1px;">Деталі</a>
+                            <a asp-action="Delete" asp-route-id="@item.ConcertId" class="btn btn-sm btn-outline-light w-100 text-uppercase opacity-75" style="letter-spacing: 1px;">Видалити</a>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Анімація карток
+        document.querySelectorAll('.holographic-card').forEach(card => {
+            const inner = card.querySelector('.holographic-card__inner');
+
+            card.addEventListener('mousemove', e => {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+
+                const px = (x / rect.width) * 100;
+                const py = (y / rect.height) * 100;
+
+                const tiltX = (py - 50) / 3;
+                const tiltY = (50 - px) / 3;
+
+                inner.style.transform = `rotateX(${tiltX}deg) rotateY(${tiltY}deg)`;
+            });
+
+            card.addEventListener('mouseleave', () => {
+                inner.style.transform = `rotateX(0deg) rotateY(0deg)`;
+            });
+        });
+
+      
+    </script>
+}
