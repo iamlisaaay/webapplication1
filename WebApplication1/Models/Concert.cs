@@ -24,6 +24,7 @@ public partial class Concert
 
     [Display(Name = "Веню")]
     public int? VenueId { get; set; }
+    
 
     public virtual ICollection<Ticket> Tickets { get; set; } = new List<Ticket>();
     [Display(Name = "Веню")]

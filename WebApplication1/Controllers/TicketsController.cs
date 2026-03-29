@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Concert.Models;
+using System.Text.Json;
 
 namespace Concert.Controllers
 {
@@ -21,8 +22,25 @@ namespace Concert.Controllers
         // GET: Tickets
         public async Task<IActionResult> Index()
         {
-            var concertContext = _context.Tickets.Include(t => t.Concert).Include(t => t.Customer);
-            return View(await concertContext.ToListAsync());
+            var tickets = await _context.Tickets
+                .Include(t => t.Concert)
+                .Include(t => t.Customer)
+                .ToListAsync();
+
+            var ticketStats = await _context.Groups
+                .Select(g => new
+                {
+                    GroupName = g.Name,
+                    TicketsSold = g.Concerts.SelectMany(c => c.Tickets).Count()
+                })
+                .OrderByDescending(g => g.TicketsSold)
+                .Take(10)
+                .ToListAsync();
+
+            ViewBag.ChartLabels = JsonSerializer.Serialize(ticketStats.Select(s => s.GroupName));
+            ViewBag.ChartData = JsonSerializer.Serialize(ticketStats.Select(s => s.TicketsSold));
+
+            return View(tickets);
         }
 
         // GET: Tickets/Details/5
