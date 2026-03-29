@@ -28,9 +28,13 @@ namespace Concert.Controllers
 
             return View(await concertContext.ToListAsync());
         }
+        public IActionResult RevenueChart()
+        {
+            return View();
+        }
 
         // GET: Concerts/Details/5
-    
+
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)

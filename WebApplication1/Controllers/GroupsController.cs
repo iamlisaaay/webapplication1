@@ -27,7 +27,10 @@ namespace Concert.Controllers
 
             return View(groups);
         }
-
+        public IActionResult ActivityChart()
+        {
+            return View();
+        }
         // GET: Groups/Details/5
         public async Task<IActionResult> Details(int? id)
         {
