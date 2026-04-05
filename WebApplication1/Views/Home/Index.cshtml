@@ -29,6 +29,15 @@
         position: relative;
         z-index: 1000;
     }
+    #liveSearch::placeholder {
+    color: rgba(255, 255, 255, 0.85);
+    opacity: 1;
+    font-weight: 400;
+}
+
+#liveSearch:focus::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+}
 
     .navbar-brand, .nav-link {
         color: #ffffff !important;
