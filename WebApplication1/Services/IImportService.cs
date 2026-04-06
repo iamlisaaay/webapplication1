@@ -1,0 +1,6 @@
+﻿namespace Concert.Services;
+
+public interface IImportService<TEntity> where TEntity : class
+{
+    Task ImportFromStreamAsync(Stream stream, CancellationToken ct);
+}

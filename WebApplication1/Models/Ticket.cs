@@ -35,6 +35,6 @@ public partial class Ticket
     [Required(ErrorMessage = "Поле не повинне бути порожнім")]
     public virtual Concert? Concert { get; set; }
     [Display(Name = "Покупець")]
-    [Required(ErrorMessage = "Поле не повинне бути порожнім")]
+
     public virtual Customer? Customer { get; set; }
 }

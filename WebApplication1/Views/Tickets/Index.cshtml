@@ -92,6 +92,20 @@
         <a asp-action="Create" class="btn btn-outline-light text-uppercase" style="letter-spacing: 2px;">
             + Продати квиток
         </a>
+
+    </div>
+    <div class="mb-3 d-flex gap-2">
+        <form asp-action="ClearAllTickets" method="post">
+            <button type="submit" class="btn btn-danger" onclick="return confirm('Ви впевнені, що хочете ВИДАЛИТИ ВСІ квитки?')">
+                Очистити всі квитки
+            </button>
+        </form>
+
+        <form asp-action="GenerateTestData" method="post">
+            <button type="submit" class="btn btn-warning">
+                Згенерувати (90% продано / 10% ні)
+            </button>
+        </form>
     </div>
 
     <div class="table-container table-responsive mb-5">

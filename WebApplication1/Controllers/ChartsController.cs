@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Concert.Models;
+using System.Text.Json;
 
 namespace Concert.Controllers
 {
@@ -15,13 +16,13 @@ namespace Concert.Controllers
             _context = context;
         }
 
-        // 1. Отримання списку гуртів для випадаючого списку
+        // 1. Отримання списку груп
         [HttpGet("groups")]
         public async Task<IActionResult> GetGroupsAsync(CancellationToken cancellationToken)
         {
             var groups = await _context.Groups
                 .Select(g => new {
-                    id = g.GroupId, // Переконайся, що первинний ключ називається GroupId (або зміни на Id, якщо він так називається)
+                    id = g.GroupId,
                     name = g.Name
                 })
                 .ToListAsync(cancellationToken);
@@ -29,7 +30,7 @@ namespace Concert.Controllers
             return Json(groups);
         }
 
-        // 2. Графік №1: Продані квитки та зароблені гроші по місяцях (з фільтром)
+        // 2. Дані для графіка продажів (Квитки + Гроші)
         [HttpGet("monthlySales")]
         public async Task<IActionResult> GetMonthlySalesAsync([FromQuery] int? groupId, CancellationToken cancellationToken)
         {
@@ -37,7 +38,6 @@ namespace Concert.Controllers
                 .Include(t => t.Concert)
                 .Where(t => t.Status == TicketStatus.Purchased && t.Concert.DateTime.HasValue);
 
-            // Фільтр по гурту
             if (groupId.HasValue && groupId.Value > 0)
             {
                 query = query.Where(t => t.Concert.Groups.Any(g => g.GroupId == groupId.Value));
@@ -57,7 +57,6 @@ namespace Concert.Controllers
                 .OrderBy(x => x.year).ThenBy(x => x.month)
                 .ToListAsync(cancellationToken);
 
-            // Форматування для JS
             var result = data.Select(d => new {
                 monthLabel = $"{d.year}-{d.month:D2}",
                 ticketsSold = d.ticketsSold,
@@ -67,22 +66,40 @@ namespace Concert.Controllers
             return Json(result);
         }
 
-        // 3. Графік №2: Втрачені гроші (непродані квитки)
+        // 3. Дані для графіка порівняння (Зароблено vs Втрачено)
         [HttpGet("lostRevenue")]
-        public async Task<IActionResult> GetLostRevenueAsync(CancellationToken cancellationToken)
+        public async Task<IActionResult> GetLostRevenueAsync([FromQuery] int? groupId, CancellationToken cancellationToken)
         {
-            var lostData = await _context.Tickets
+            var query = _context.Tickets
                 .Include(t => t.Concert)
-                .Where(t => t.Status == TicketStatus.NotPurchased) // Рахуємо тільки некуплені квитки
-                .GroupBy(t => t.Concert.Title)
-                .Select(g => new {
-                    concertTitle = g.Key,
-                    lostRevenue = g.Sum(t => t.Price)
+                .Where(t => t.Concert.DateTime.HasValue);
+
+            if (groupId.HasValue && groupId.Value > 0)
+            {
+                query = query.Where(t => t.Concert.Groups.Any(g => g.GroupId == groupId.Value));
+            }
+
+            var data = await query
+                .GroupBy(t => new {
+                    Year = t.Concert.DateTime.Value.Year,
+                    Month = t.Concert.DateTime.Value.Month
                 })
-                .OrderByDescending(x => x.lostRevenue)
+                .Select(g => new {
+                    year = g.Key.Year,
+                    month = g.Key.Month,
+                    lostRevenue = g.Where(t => t.Status == TicketStatus.NotPurchased).Sum(t => t.Price),
+                    earnedRevenue = g.Where(t => t.Status == TicketStatus.Purchased).Sum(t => t.Price)
+                })
+                .OrderBy(x => x.year).ThenBy(x => x.month)
                 .ToListAsync(cancellationToken);
 
-            return Json(lostData);
+            var result = data.Select(d => new {
+                monthLabel = $"{d.year}-{d.month:D2}",
+                lostRevenue = d.lostRevenue,
+                earnedRevenue = d.earnedRevenue
+            });
+
+            return Json(result);
         }
     }
 }

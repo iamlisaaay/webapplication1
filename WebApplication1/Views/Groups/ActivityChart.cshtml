@@ -4,25 +4,46 @@
 
 <style>
     body {
-        background-color: #040721; /* Твій фірмовий темний фон */
+        background-color: #040721;
         font-family: 'Montserrat', sans-serif;
     }
+
     .chart-card {
-        background: rgba(30, 41, 59, 0.6); 
-        border: 1px solid rgba(255, 255, 255, 0.15); 
+        background: rgba(30, 41, 59, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.15);
         backdrop-filter: blur(10px);
     }
+
     .custom-select {
         background-color: #1e293b;
         color: white;
         border: 1px solid rgba(255, 255, 255, 0.3);
     }
-    .custom-select:focus {
-        background-color: #0f172a;
-        color: white;
-        border-color: #3b82f6;
-        box-shadow: none;
+
+        .custom-select:focus {
+            background-color: #0f172a;
+            color: white;
+            border-color: #3b82f6;
+            box-shadow: none;
+        }
+
+    .lost-table-container {
+        max-height: 400px;
+        overflow-y: auto;
     }
+
+    .lost-table {
+        color: white;
+        background: rgba(255, 255, 255, 0.05);
+        font-size: 0.85rem;
+    }
+
+        .lost-table thead th {
+            position: sticky;
+            top: 0;
+            background: #1e293b;
+            z-index: 1;
+        }
 </style>
 
 <div class="container mt-5">
@@ -33,140 +54,142 @@
 
     <div class="p-4 rounded-4 shadow chart-card mb-5">
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h3 class="text-white m-0">Динаміка продажів по місяцях</h3>
+            <h3 class="text-white m-0">Динаміка активності по місяцях</h3>
             <div style="width: 250px;">
-                <select id="groupSelector" class="form-select custom-select" onchange="loadMonthlySalesChart()">
+                <select id="groupSelectorSales" class="form-select custom-select" onchange="loadMonthlySalesChart()">
                     <option value="0">Всі гурти</option>
-                    </select>
+                </select>
             </div>
         </div>
-        <div id="monthlySalesChart" style="height: 500px; width: 100%;"></div>
+        <div id="monthlySalesChart" style="height: 400px; width: 100%;"></div>
     </div>
 
     <div class="p-4 rounded-4 shadow chart-card mb-5">
-        <h3 class="text-white mb-4">Втрачений прибуток (непродані квитки)</h3>
-        <div id="lostRevenueChart" style="height: 500px; width: 100%;"></div>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h3 class="text-white m-0">Порівняння прибутку та втрат</h3>
+            <div style="width: 250px;">
+                <select id="groupSelectorLost" class="form-select custom-select" onchange="loadLostRevenueChart()">
+                    <option value="0">Всі гурти</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-8">
+                <div id="lostRevenueChart" style="height: 400px; width: 100%;"></div>
+            </div>
+            <div class="col-lg-4">
+                <h5 class="text-white-50 mb-3">Зведена таблиця</h5>
+                <div class="lost-table-container rounded border border-secondary">
+                    <table class="table table-dark table-hover table-sm lost-table">
+                        <thead>
+                            <tr>
+                                <th>Місяць</th>
+                                <th class="text-success">Дохід</th>
+                                <th class="text-danger">Втрати</th>
+                            </tr>
+                        </thead>
+                        <tbody id="comparisonTableBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
 @section Scripts {
     <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
     <script type="text/javascript">
-        google.charts.load('current', {'packages':['corechart']});
+        google.charts.load('current', { 'packages': ['corechart'] });
         google.charts.setOnLoadCallback(initDashboard);
 
         function initDashboard() {
-            loadGroups();
-            loadMonthlySalesChart();
-            loadLostRevenueChart();
+        loadGroups();
+        loadMonthlySalesChart();
+        loadLostRevenueChart();
         }
 
-        // 1. Завантаження списку гуртів для селектора
         function loadGroups() {
-            fetch('/api/charts/groups')
-                .then(response => response.json())
-                .then(data => {
-                    const selector = document.getElementById('groupSelector');
-                    data.forEach(group => {
-                        const option = document.createElement('option');
-                        option.value = group.id;
-                        option.textContent = group.name;
-                        selector.appendChild(option);
-                    });
-                })
-                .catch(error => console.error('Помилка завантаження гуртів:', error));
+        fetch('/api/charts/groups')
+        .then(r => r.json())
+        .then(data => {
+        const s1 = document.getElementById('groupSelectorSales');
+        const s2 = document.getElementById('groupSelectorLost');
+        data.forEach(g => {
+        const opt = document.createElement('option');
+        opt.value = g.id;
+        opt.textContent = g.name;
+        s1.appendChild(opt.cloneNode(true));
+        s2.appendChild(opt);
+        });
+        });
         }
 
-        // 2. Графік: Продажі по місяцях (ComboChart з двома осями)
         function loadMonthlySalesChart() {
-            const groupId = document.getElementById('groupSelector').value;
-            const url = groupId > 0 ? `/api/charts/monthlySales?groupId=${groupId}` : '/api/charts/monthlySales';
+        const gid = document.getElementById('groupSelectorSales').value;
+        const url = gid > 0 ? `/api/charts/monthlySales?groupId=${gid}` : '/api/charts/monthlySales';
 
-            fetch(url)
-                .then(response => response.json())
-                .then(data => {
-                    const dataTable = new google.visualization.DataTable();
-                    dataTable.addColumn('string', 'Місяць');
-                    dataTable.addColumn('number', 'Продані квитки (шт)');
-                    dataTable.addColumn('number', 'Заробіток (₴)');
+        fetch(url).then(r => r.json()).then(data => {
+        const dt = new google.visualization.DataTable();
+        dt.addColumn('string', 'Місяць');
+        dt.addColumn('number', 'Квитки');
+        dt.addColumn('number', 'Заробіток');
+        data.forEach(i => dt.addRow([i.monthLabel, i.ticketsSold, i.revenue]));
 
-                    data.forEach(item => {
-                        dataTable.addRow([item.monthLabel, item.ticketsSold, item.revenue]);
-                    });
-
-                    const options = {
-                        backgroundColor: 'transparent',
-                        legend: { position: 'top', textStyle: { color: 'white', fontName: 'Montserrat', fontSize: 14 } },
-                        colors: ['#3b82f6', '#10b981'], // Синій - квитки, Зелений - гроші
-                        seriesType: 'bars', // Показувати стовпчиками
-                        series: {
-                            0: { targetAxisIndex: 0 }, // Ліва вісь Y для квитків
-                            1: { targetAxisIndex: 1, type: 'line', lineWidth: 3, pointSize: 8 } // Права вісь Y для грошей (лінією виглядає стильніше, але можеш змінити type на 'bars')
-                        },
-                        vAxes: {
-                            0: { 
-                                title: 'Кількість квитків',
-                                titleTextStyle: { color: 'rgba(255,255,255,0.7)', italic: false },
-                                textStyle: { color: 'rgba(255,255,255,0.7)', fontName: 'Montserrat' },
-                                gridlines: { color: 'rgba(255,255,255,0.1)' },
-                                format: '0'
-                            },
-                            1: { 
-                                title: 'Прибуток (₴)',
-                                titleTextStyle: { color: 'rgba(255,255,255,0.7)', italic: false },
-                                textStyle: { color: 'rgba(255,255,255,0.7)', fontName: 'Montserrat' },
-                                gridlines: { color: 'transparent' } // Ховаємо сітку для другої осі, щоб не було "каші"
-                            }
-                        },
-                        hAxis: {
-                            textStyle: { color: 'rgba(255,255,255,0.7)', fontName: 'Montserrat' }
-                        },
-                        chartArea: { width: '85%', height: '70%' },
-                        animation: { startup: true, duration: 1000, easing: 'out' }
-                    };
-
-                    const chart = new google.visualization.ComboChart(document.getElementById('monthlySalesChart'));
-                    chart.draw(dataTable, options);
-                })
-                .catch(error => console.error('Помилка завантаження даних продажів:', error));
+        new google.visualization.ComboChart(document.getElementById('monthlySalesChart')).draw(dt, {
+        backgroundColor: 'transparent',
+        colors: ['#3b82f6', '#10b981'],
+        seriesType: 'bars',
+        series: { 1: { type: 'line', targetAxisIndex: 1, lineWidth: 4, pointSize: 10 } },
+        legend: { textStyle: { color: '#fff' }, position: 'top' },
+        hAxis: { textStyle: { color: '#fff' } },
+        vAxes: {
+        0: { title: 'Квитки', textStyle: { color: '#fff' }, gridlines: { count: 6, color: 'rgba(255,255,255,0.1)' }, viewWindow: {min:0} },
+        1: { title: 'Гроші (₴)', textStyle: { color: '#fff' }, gridlines: { count: 6, color: 'transparent' }, format: '#,### ₴', viewWindow: {min:0} }
+        },
+        chartArea: { width: '80%', height: '70%' }
+        });
+        });
         }
 
-        // 3. Графік: Втрачені гроші по концертах
         function loadLostRevenueChart() {
-            fetch('/api/charts/lostRevenue')
-                .then(response => response.json())
-                .then(data => {
-                    const dataTable = new google.visualization.DataTable();
-                    dataTable.addColumn('string', 'Концерт');
-                    dataTable.addColumn('number', 'Втрачено (₴)');
+        const gid = document.getElementById('groupSelectorLost').value;
+        const url = gid > 0 ? `/api/charts/lostRevenue?groupId=${gid}` : '/api/charts/lostRevenue';
 
-                    data.forEach(item => {
-                        dataTable.addRow([item.concertTitle, item.lostRevenue]);
-                    });
+        fetch(url).then(r => r.json()).then(data => {
+        const dt = new google.visualization.DataTable();
+        dt.addColumn('string', 'Місяць');
+        dt.addColumn('number', 'Зароблено');
+        dt.addColumn('number', 'Втрачено');
 
-                    const options = {
-                        backgroundColor: 'transparent',
-                        legend: { position: 'none' },
-                        colors: ['#ef4444'], // Червоний колір для втрат (асоціюється з мінусом)
-                        hAxis: {
-                            textStyle: { color: 'rgba(255,255,255,0.7)', fontName: 'Montserrat' },
-                            slantedText: true,
-                            slantedTextAngle: 45
-                        },
-                        vAxis: {
-                            title: 'Недоотриманий прибуток (₴)',
-                            titleTextStyle: { color: 'rgba(255,255,255,0.7)', italic: false },
-                            textStyle: { color: 'rgba(255,255,255,0.7)', fontName: 'Montserrat' },
-                            gridlines: { color: 'rgba(255,255,255,0.1)' }
-                        },
-                        chartArea: { width: '85%', height: '70%' },
-                        animation: { startup: true, duration: 1000, easing: 'out' }
-                    };
+        const tbody = document.getElementById('comparisonTableBody');
+        tbody.innerHTML = '';
 
-                    const chart = new google.visualization.ColumnChart(document.getElementById('lostRevenueChart'));
-                    chart.draw(dataTable, options);
-                })
-                .catch(error => console.error('Помилка завантаження даних втрат:', error));
+        data.forEach(i => {
+        dt.addRow([i.monthLabel, i.earnedRevenue, i.lostRevenue]);
+        tbody.innerHTML += `
+        <tr>
+        <td>${i.monthLabel}</td>
+        <td class="text-success">${i.earnedRevenue.toLocaleString()} ₴</td>
+        <td class="text-danger">${i.lostRevenue.toLocaleString()} ₴</td>
+        </tr>`;
+        });
+
+        new google.visualization.ColumnChart(document.getElementById('lostRevenueChart')).draw(dt, {
+        backgroundColor: 'transparent',
+        colors: ['#10b981', '#ef4444'],
+        legend: { textStyle: { color: '#fff' }, position: 'top' },
+        hAxis: { textStyle: { color: '#fff' } },
+        vAxis: {
+        textStyle: { color: '#fff' },
+        gridlines: { count: 6, color: 'rgba(255,255,255,0.1)' },
+        format: '#,### ₴',
+        viewWindow: {min:0}
+        },
+        chartArea: { width: '85%', height: '70%' }
+        });
+        });
         }
     </script>
 }

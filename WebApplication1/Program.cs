@@ -7,6 +7,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
 builder.Services.AddDbContext<ConcertContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddScoped<Concert.Services.IDataPortServiceFactory<Concert.Models.Concert>, Concert.Services.ConcertDataPortServiceFactory>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

@@ -48,15 +48,16 @@
     .card-content {
         pointer-events: none;
     }
-    #liveSearch::placeholder {
-    color: rgba(255, 255, 255, 0.85);
-    opacity: 1;
-    font-weight: 400;
-}
 
-#liveSearch:focus::placeholder {
-    color: rgba(255, 255, 255, 0.5);
-}
+    #liveSearch::placeholder {
+        color: rgba(255, 255, 255, 0.85);
+        opacity: 1;
+        font-weight: 400;
+    }
+
+    #liveSearch:focus::placeholder {
+        color: rgba(255, 255, 255, 0.5);
+    }
 
     /* === КНОПКИ === */
     .action-buttons {
@@ -86,7 +87,6 @@
     <div class="row">
         @foreach (var item in Model)
         {
-            
             var groupNames = item.Groups != null ? string.Join(" ", item.Groups.Select(g => g.Name)) : "";
             var memberNames = item.Groups != null ? string.Join(" ", item.Groups.Where(g => g.Members != null).SelectMany(g => g.Members).Select(m => m.FullName)) : "";
 
@@ -135,6 +135,16 @@
                 </div>
             </div>
         }
+        
+        <div class="col-12 mb-3 mt-2 d-flex gap-3">
+            <a asp-action="Import" class="btn btn-outline-light text-uppercase" style="letter-spacing: 2px;">
+                Імпорт концертів
+            </a>
+            <a asp-action="Export" class="btn btn-outline-light text-uppercase" style="letter-spacing: 2px;">
+                Експорт концертів
+            </a>
+        </div>
+        
     </div>
 </div>
 
@@ -162,7 +172,5 @@
                 inner.style.transform = `rotateX(0deg) rotateY(0deg)`;
             });
         });
-
-      
     </script>
 }

@@ -120,7 +120,8 @@ namespace Concert.Controllers
             {
                 return NotFound();
             }
-
+            ModelState.Remove("Concert");
+            ModelState.Remove("Customer");
             if (ModelState.IsValid)
             {
                 try
@@ -185,5 +186,81 @@ namespace Concert.Controllers
         {
             return _context.Tickets.Any(e => e.TicketId == id);
         }
+
+
+        // POST: Tickets/ClearAllTickets
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ClearAllTickets()
+        {
+            // Видаляємо всі квитки з бази одним запитом
+            await _context.Tickets.ExecuteDeleteAsync();
+            return RedirectToAction(nameof(Index));
+        }
+
+        // POST: Tickets/GenerateTestData
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> GenerateTestData()
+        {
+            // Завантажуємо всі концерти та всіх наявних покупців у пам'ять
+            var concerts = await _context.Concerts.ToListAsync();
+            var customers = await _context.Customers.ToListAsync();
+
+            // Якщо покупців взагалі немає, створимо хоча б одного, щоб було кому продавати
+            if (!customers.Any())
+            {
+                var newCustomer = new Customer
+                {
+                    FullName = "Тестовий Покупець",
+                    Email = "test@example.com",
+                    BirthDate = DateOnly.FromDateTime(DateTime.Now.AddYears(-20)),
+                    LoyaltyDiscount = 0
+                };
+                _context.Customers.Add(newCustomer);
+                await _context.SaveChangesAsync();
+                customers.Add(newCustomer);
+            }
+
+            Random rand = new Random();
+
+            foreach (var concert in concerts)
+            {
+                for (int i = 1; i <= 100; i++)
+                {
+                    // Ймовірність: 90% куплено, 10% не куплено
+                    bool isPurchased = rand.Next(1, 101) <= 90;
+
+                    int? randomCustomerId = null;
+                    if (isPurchased)
+                    {
+                        // Обираємо випадкового покупця зі списку наявних у базі
+                        int customerIndex = rand.Next(customers.Count);
+                        randomCustomerId = customers[customerIndex].CustomerId;
+                    }
+
+                    var ticket = new Ticket
+                    {
+                        ConcertId = concert.ConcertId,
+                        CustomerId = randomCustomerId, // null для некуплених, випадковий ID для куплених
+                        Status = isPurchased ? TicketStatus.Purchased : TicketStatus.NotPurchased,
+                        RNumber = rand.Next(1, 21),
+                        SeatNumber = rand.Next(1, 21),
+                        Price = rand.Next(300, 2501)
+                    };
+
+                    _context.Tickets.Add(ticket);
+                }
+            }
+
+            await _context.SaveChangesAsync();
+            return RedirectToAction(nameof(Index));
+        }
     }
+
+
+
+
+
+
 }

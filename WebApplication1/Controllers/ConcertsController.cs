@@ -1,78 +1,72 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using Concert.Models;
+using Concert.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using Concert.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Concert.Controllers
 {
     public class ConcertsController : Controller
     {
         private readonly ConcertContext _context;
+        private readonly IDataPortServiceFactory<Concert.Models.Concert> _portFactory;
 
-        public ConcertsController(ConcertContext context)
+        // ЗАЛИШАЄМО ТІЛЬКИ ОДИН КОНСТРУКТОР, ЯКИЙ ПРИЙМАЄ ОБИДВА ПАРАМЕТРИ
+        public ConcertsController(ConcertContext context, IDataPortServiceFactory<Concert.Models.Concert> portFactory)
         {
             _context = context;
+            _portFactory = portFactory;
         }
 
+        // GET: Concerts
         public async Task<IActionResult> Index()
         {
             var concertContext = _context.Concerts
                 .Include(c => c.Venue)
                 .Include(c => c.Groups)
-            .ThenInclude(g => g.Members);
-
+                .ThenInclude(g => g.Members);
 
             return View(await concertContext.ToListAsync());
         }
-        public IActionResult RevenueChart()
-        {
-            return View();
-        }
+
+        public IActionResult RevenueChart() => View();
 
         // GET: Concerts/Details/5
-
         public async Task<IActionResult> Details(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var concert = await _context.Concerts
                 .Include(c => c.Venue)
-                .Include(c => c.Groups) 
-            .FirstOrDefaultAsync(m => m.ConcertId == id);
+                .Include(c => c.Groups)
+                .FirstOrDefaultAsync(m => m.ConcertId == id);
 
-            if (concert == null)
-            {
-                return NotFound();
-            }
+            if (concert == null) return NotFound();
 
             return View(concert);
         }
-
 
         // GET: Concerts/Create
         public IActionResult Create()
         {
             ViewData["VenueId"] = new SelectList(_context.Venues, "VenueId", "Name");
-          
             ViewData["AllGroups"] = new SelectList(_context.Groups, "GroupId", "Name");
             return View();
         }
 
         // POST: Concerts/Create
         [HttpPost]
-[ValidateAntiForgeryToken]
-public async Task<IActionResult> Create([Bind("ConcertId,Title,DateTime,VenueId,ImageUrl")] Models.Concert concert, int[] selectedGroups)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create([Bind("ConcertId,Title,DateTime,VenueId,ImageUrl")] Models.Concert concert, int[] selectedGroups)
         {
             ModelState.Remove("ImageUrl");
             ModelState.Remove("Venue");
             ModelState.Remove("Groups");
+
             if (concert.DateTime.HasValue)
             {
                 bool hasConcertInThisVenue = _context.Concerts
@@ -88,10 +82,8 @@ public async Task<IActionResult> Create([Bind("ConcertId,Title,DateTime,VenueId,
 
             if (ModelState.IsValid)
             {
-               
                 if (selectedGroups != null && selectedGroups.Length > 0)
                 {
-                    
                     var groupsToAdd = await _context.Groups
                         .Where(g => selectedGroups.Contains(g.GroupId))
                         .ToListAsync();
@@ -107,56 +99,40 @@ public async Task<IActionResult> Create([Bind("ConcertId,Title,DateTime,VenueId,
                 return RedirectToAction(nameof(Index));
             }
 
-           
             ViewData["VenueId"] = new SelectList(_context.Venues, "VenueId", "Name", concert.VenueId);
             ViewData["AllGroups"] = new SelectList(_context.Groups, "GroupId", "Name");
             return View(concert);
         }
 
         // GET: Concerts/Edit/5
-        // GET: Concerts/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var concert = await _context.Concerts
                 .Include(c => c.Groups)
                 .FirstOrDefaultAsync(m => m.ConcertId == id);
 
-            if (concert == null)
-            {
-                return NotFound();
-            }
+            if (concert == null) return NotFound();
 
-       
             var selectedGroups = concert.Groups.Select(g => g.GroupId).ToList();
-
             ViewData["VenueId"] = new SelectList(_context.Venues, "VenueId", "Name", concert.VenueId);
-
-          
             ViewData["AllGroups"] = new MultiSelectList(_context.Groups, "GroupId", "Name", selectedGroups);
 
             return View(concert);
         }
-        // POST: Concerts/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+
         // POST: Concerts/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("ConcertId,Title,DateTime,VenueId,ImageUrl")] Models.Concert concert, int[] selectedGroups)
         {
-            if (id != concert.ConcertId)
-            {
-                return NotFound();
-            }
+            if (id != concert.ConcertId) return NotFound();
 
             ModelState.Remove("Venue");
             ModelState.Remove("Tickets");
             ModelState.Remove("Groups");
+
             if (concert.DateTime.HasValue)
             {
                 bool hasConcertInThisVenue = _context.Concerts
@@ -175,23 +151,19 @@ public async Task<IActionResult> Create([Bind("ConcertId,Title,DateTime,VenueId,
             {
                 try
                 {
-                   
                     var concertToUpdate = await _context.Concerts
                         .Include(c => c.Groups)
                         .FirstOrDefaultAsync(c => c.ConcertId == id);
 
                     if (concertToUpdate == null) return NotFound();
 
-               
                     concertToUpdate.Title = concert.Title;
                     concertToUpdate.DateTime = concert.DateTime;
                     concertToUpdate.VenueId = concert.VenueId;
                     concertToUpdate.ImageUrl = concert.ImageUrl;
 
-             
                     concertToUpdate.Groups.Clear();
 
-                
                     if (selectedGroups != null && selectedGroups.Length > 0)
                     {
                         var groupsToAdd = await _context.Groups
@@ -204,20 +176,13 @@ public async Task<IActionResult> Create([Bind("ConcertId,Title,DateTime,VenueId,
                         }
                     }
 
-                    
                     await _context.SaveChangesAsync();
                     return RedirectToAction(nameof(Index));
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!ConcertExists(concert.ConcertId))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
+                    if (!ConcertExists(concert.ConcertId)) return NotFound();
+                    else throw;
                 }
             }
 
@@ -225,21 +190,17 @@ public async Task<IActionResult> Create([Bind("ConcertId,Title,DateTime,VenueId,
             ViewData["AllGroups"] = new MultiSelectList(_context.Groups, "GroupId", "Name", selectedGroups);
             return View(concert);
         }
+
         // GET: Concerts/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var concert = await _context.Concerts
                 .Include(c => c.Venue)
                 .FirstOrDefaultAsync(m => m.ConcertId == id);
-            if (concert == null)
-            {
-                return NotFound();
-            }
+
+            if (concert == null) return NotFound();
 
             return View(concert);
         }
@@ -259,9 +220,32 @@ public async Task<IActionResult> Create([Bind("ConcertId,Title,DateTime,VenueId,
             return RedirectToAction(nameof(Index));
         }
 
-        private bool ConcertExists(int id)
+        private bool ConcertExists(int id) => _context.Concerts.Any(e => e.ConcertId == id);
+
+        // МЕТОДИ ДЛЯ ІМПОРТУ ТА ЕКСПОРТУ
+        [HttpGet]
+        public IActionResult Import() => View();
+
+        [HttpPost]
+        public async Task<IActionResult> Import(IFormFile fileExcel, CancellationToken ct)
         {
-            return _context.Concerts.Any(e => e.ConcertId == id);
+            if (fileExcel == null || fileExcel.Length == 0) return View();
+
+            var service = _portFactory.GetImportService(fileExcel.ContentType);
+            using var stream = fileExcel.OpenReadStream();
+            await service.ImportFromStreamAsync(stream, ct);
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        public async Task<IActionResult> Export(CancellationToken ct)
+        {
+            var service = _portFactory.GetExportService("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            var stream = new MemoryStream();
+            await service.WriteToAsync(stream, ct);
+            stream.Position = 0;
+
+            return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"concerts_{DateTime.Now:yyyyMMdd}.xlsx");
         }
     }
 }
