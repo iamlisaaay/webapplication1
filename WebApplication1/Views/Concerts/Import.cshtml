@@ -1,0 +1,40 @@
+﻿@{
+    ViewData["Title"] = "Імпорт концертів";
+}
+
+<h1>Імпорт концертів з Excel</h1>
+
+@if (ViewBag.Errors != null)
+{
+    // Приводимо до потрібного типу
+    var errors = ViewBag.Errors as List<Concert.Models.ImportError>;
+    if (errors != null && errors.Any())
+    {
+        <div class="alert alert-danger mt-3">
+            <h4 class="alert-heading">Під час імпорту виникли помилки!</h4>
+            <p>Наступні рядки не були додані до бази даних. Будь ласка, виправте ці помилки в своєму Excel-файлі та завантажте ці рядки ще раз:</p>
+            <hr>
+            <ul class="mb-0">
+                @foreach (var error in errors)
+                {
+                    <li><strong>Рядок @error.RowNumber (@error.ConcertTitle):</strong> @error.ErrorMessage</li>
+                }
+            </ul>
+        </div>
+    }
+}
+
+<div class="row mt-4">
+    <div class="col-md-4">
+        <form asp-action="Import" enctype="multipart/form-data">
+            <div class="form-group">
+                <label class="control-label">Оберіть Excel файл для імпорту</label>
+                <input type="file" name="fileExcel" class="form-control" accept=".xlsx" required />
+            </div>
+            <div class="form-group mt-3">
+                <input type="submit" value="Завантажити" class="btn btn-primary" />
+                <a asp-action="Index" class="btn btn-secondary">Назад до списку</a>
+            </div>
+        </form>
+    </div>
+</div>

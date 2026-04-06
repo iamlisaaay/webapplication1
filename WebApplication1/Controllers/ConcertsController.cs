@@ -225,7 +225,6 @@ namespace Concert.Controllers
         // МЕТОДИ ДЛЯ ІМПОРТУ ТА ЕКСПОРТУ
         [HttpGet]
         public IActionResult Import() => View();
-
         [HttpPost]
         public async Task<IActionResult> Import(IFormFile fileExcel, CancellationToken ct)
         {
@@ -233,8 +232,18 @@ namespace Concert.Controllers
 
             var service = _portFactory.GetImportService(fileExcel.ContentType);
             using var stream = fileExcel.OpenReadStream();
-            await service.ImportFromStreamAsync(stream, ct);
 
+            // Отримуємо помилки від сервісу
+            var importErrors = await service.ImportFromStreamAsync(stream, ct);
+
+            // Якщо є хоча б одна помилка, повертаємося на сторінку імпорту і показуємо їх
+            if (importErrors != null && importErrors.Any())
+            {
+                ViewBag.Errors = importErrors;
+                return View(); // Повертаємо ту саму в'юшку "Import.cshtml"
+            }
+
+            // Якщо помилок немає, йдемо на Index
             return RedirectToAction(nameof(Index));
         }
 
