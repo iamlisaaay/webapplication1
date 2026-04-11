@@ -7,9 +7,13 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Concert.Models;
 using System.Text.Json;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace Concert.Controllers
 {
+    // Захищаємо весь контролер: доступ мають лише ті, хто увійшов на сайт
+    [Authorize]
     public class TicketsController : Controller
     {
         private readonly ConcertContext _context;
@@ -22,11 +26,29 @@ namespace Concert.Controllers
         // GET: Tickets
         public async Task<IActionResult> Index()
         {
-            var tickets = await _context.Tickets
+            // Починаємо формувати запит до бази
+            IQueryable<Ticket> ticketsQuery = _context.Tickets
                 .Include(t => t.Concert)
-                .Include(t => t.Customer)
-                .ToListAsync();
+                .Include(t => t.Customer);
 
+            // ФІЛЬТРАЦІЯ: Якщо це НЕ Адмін, показуємо лише його квитки
+            if (!User.IsInRole("Admin"))
+            {
+                var userIdStr = User.FindFirstValue("UserId");
+                if (int.TryParse(userIdStr, out int userId))
+                {
+                    ticketsQuery = ticketsQuery.Where(t => t.CustomerId == userId);
+                }
+                else
+                {
+                    // Якщо ID чомусь не знайдено, не показуємо нічого для безпеки
+                    ticketsQuery = ticketsQuery.Where(t => false);
+                }
+            }
+
+            var tickets = await ticketsQuery.ToListAsync();
+
+            // Статистика для графіка (Адмінам буде цікаво, а звичайним юзерам просто красиво)
             var ticketStats = await _context.Groups
                 .Select(g => new
                 {
@@ -55,15 +77,32 @@ namespace Concert.Controllers
                 .Include(t => t.Concert)
                 .Include(t => t.Customer)
                 .FirstOrDefaultAsync(m => m.TicketId == id);
+
             if (ticket == null)
             {
                 return NotFound();
             }
 
+            // БЕЗПЕКА: Перевіряємо, чи має право звичайний юзер дивитися цей квиток
+            if (!User.IsInRole("Admin"))
+            {
+                var userIdStr = User.FindFirstValue("UserId");
+                if (!int.TryParse(userIdStr, out int userId) || ticket.CustomerId != userId)
+                {
+                    // Якщо це чужий квиток — показуємо сторінку "Доступ заборонено"
+                    return RedirectToAction("AccessDenied", "Account");
+                }
+            }
+
             return View(ticket);
         }
 
+        // ====================================================================
+        // ДАЛІ ЙДУТЬ МЕТОДИ, ДОСТУПНІ ТІЛЬКИ АДМІНІСТРАТОРУ
+        // ====================================================================
+
         // GET: Tickets/Create
+        [Authorize(Roles = "Admin")]
         public IActionResult Create()
         {
             ViewData["ConcertId"] = new SelectList(_context.Concerts, "ConcertId", "Title");
@@ -72,10 +111,9 @@ namespace Concert.Controllers
         }
 
         // POST: Tickets/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create([Bind("TicketId,ConcertId,CustomerId,SeatNumber,RNumber,Price,Status")] Ticket ticket)
         {
             ModelState.Remove("Concert");
@@ -92,6 +130,7 @@ namespace Concert.Controllers
         }
 
         // GET: Tickets/Edit/5
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -110,10 +149,9 @@ namespace Concert.Controllers
         }
 
         // POST: Tickets/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Edit(int id, [Bind("TicketId,ConcertId,CustomerId,SeatNumber,RNumber,Price,Status")] Ticket ticket)
         {
             if (id != ticket.TicketId)
@@ -148,6 +186,7 @@ namespace Concert.Controllers
         }
 
         // GET: Tickets/Delete/5
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -170,6 +209,7 @@ namespace Concert.Controllers
         // POST: Tickets/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var ticket = await _context.Tickets.FindAsync(id);
@@ -187,13 +227,12 @@ namespace Concert.Controllers
             return _context.Tickets.Any(e => e.TicketId == id);
         }
 
-
         // POST: Tickets/ClearAllTickets
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> ClearAllTickets()
         {
-            // Видаляємо всі квитки з бази одним запитом
             await _context.Tickets.ExecuteDeleteAsync();
             return RedirectToAction(nameof(Index));
         }
@@ -201,13 +240,12 @@ namespace Concert.Controllers
         // POST: Tickets/GenerateTestData
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GenerateTestData()
         {
-            // Завантажуємо всі концерти та всіх наявних покупців у пам'ять
             var concerts = await _context.Concerts.ToListAsync();
             var customers = await _context.Customers.ToListAsync();
 
-            // Якщо покупців взагалі немає, створимо хоча б одного, щоб було кому продавати
             if (!customers.Any())
             {
                 var newCustomer = new Customer
@@ -228,13 +266,10 @@ namespace Concert.Controllers
             {
                 for (int i = 1; i <= 100; i++)
                 {
-                    // Ймовірність: 90% куплено, 10% не куплено
                     bool isPurchased = rand.Next(1, 101) <= 90;
-
                     int? randomCustomerId = null;
                     if (isPurchased)
                     {
-                        // Обираємо випадкового покупця зі списку наявних у базі
                         int customerIndex = rand.Next(customers.Count);
                         randomCustomerId = customers[customerIndex].CustomerId;
                     }
@@ -242,7 +277,7 @@ namespace Concert.Controllers
                     var ticket = new Ticket
                     {
                         ConcertId = concert.ConcertId,
-                        CustomerId = randomCustomerId, // null для некуплених, випадковий ID для куплених
+                        CustomerId = randomCustomerId,
                         Status = isPurchased ? TicketStatus.Purchased : TicketStatus.NotPurchased,
                         RNumber = rand.Next(1, 21),
                         SeatNumber = rand.Next(1, 21),
@@ -257,10 +292,4 @@ namespace Concert.Controllers
             return RedirectToAction(nameof(Index));
         }
     }
-
-
-
-
-
-
 }

@@ -89,12 +89,16 @@
 <div class="container py-5 mt-4">
     <div class="d-flex justify-content-between align-items-center mb-5">
         <h1 class="page-title mb-0">Квитки</h1>
-        <a asp-action="Create" class="btn btn-outline-light text-uppercase" style="letter-spacing: 2px;">
-            + Продати квиток
-        </a>
-
+        @if (User.IsInRole("Admin"))
+        {
+            <a asp-action="Create" class="btn btn-outline-light text-uppercase" style="letter-spacing: 2px;">
+                + Продати квиток
+            </a>
+        }
     </div>
-    <div class="mb-3 d-flex gap-2">
+    @if (User.IsInRole("Admin"))
+    {
+        <div class="mb-3 d-flex gap-2">
         <form asp-action="ClearAllTickets" method="post">
             <button type="submit" class="btn btn-danger" onclick="return confirm('Ви впевнені, що хочете ВИДАЛИТИ ВСІ квитки?')">
                 Очистити всі квитки
@@ -106,8 +110,8 @@
                 Згенерувати (90% продано / 10% ні)
             </button>
         </form>
-    </div>
-
+    </div>}
+    
     <div class="table-container table-responsive mb-5">
         <table class="custom-table">
             <thead>
@@ -129,11 +133,13 @@
                         <td class="text-white-50">Ряд @Html.DisplayFor(modelItem => item.RNumber), Місце @Html.DisplayFor(modelItem => item.SeatNumber)</td>
                         <td class="fw-bold" style="color: #d4a373;">@Html.DisplayFor(modelItem => item.Price) ₴</td>
                         <td>@Html.DisplayFor(modelItem => item.Status)</td>
+                        @if (User.IsInRole("Admin")){
+                        
                         <td class="text-end action-links">
                             <a asp-action="Edit" asp-route-id="@item.TicketId">Ред</a>
                             <a asp-action="Details" asp-route-id="@item.TicketId">Дет</a>
                             <a asp-action="Delete" asp-route-id="@item.TicketId" class="text-danger">Вид</a>
-                        </td>
+                        </td>}
                     </tr>
                 }
             </tbody>

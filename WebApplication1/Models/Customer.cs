@@ -29,5 +29,13 @@ public partial class Customer
     [Range(0, 50, ErrorMessage = "Знижка має бути від 0 до 50 відсотків")]
     public decimal? LoyaltyDiscount { get; set; }
 
+
+    [Display(Name = "Пароль")]
+    [Required(ErrorMessage = "Пароль обов'язковий")]
+    public string Password { get; set; } = null!;
+
+    [Display(Name = "Чи є Адміном?")]
+    public bool IsAdmin { get; set; } = false; 
+
     public virtual ICollection<Ticket> Tickets { get; set; } = new List<Ticket>();
 }
