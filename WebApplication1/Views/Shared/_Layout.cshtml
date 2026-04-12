@@ -48,35 +48,40 @@
                         <li class="nav-item">
                             <a class="nav-link" asp-controller="Concerts" asp-action="Index">Концерти</a>
                         </li>
+                        
                         @if (User.IsInRole("Admin"))
-                            {
-                                <li class="nav-item">
-                                    <a class="nav-link" asp-controller="Customers" asp-action="Index">Клієнти</a>
-                                </li>                
-                            }
+                        {
                             <li class="nav-item">
+                                <a class="nav-link" asp-controller="Customers" asp-action="Index">Клієнти</a>
+                            </li>
+                        }
+
+                        <li class="nav-item">
                             <a class="nav-link" asp-controller="Groups" asp-action="Index">Гурти</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" asp-controller="Members" asp-action="Index">Учасники</a>
                         </li>
-                            @if (User.IsInRole("Admin"))
-                            {
-                                <li class="nav-item">
-                                    <a class="nav-link" asp-controller="Roles" asp-action="Index">Ролі</a>
-                                </li>                
-                            }
+
+                        @if (User.IsInRole("Admin"))
+                        {
                             <li class="nav-item">
+                                <a class="nav-link" asp-controller="Roles" asp-action="Index">Ролі</a>
+                            </li>
+                        }
+
+                        <li class="nav-item">
                             <a class="nav-link" asp-controller="Tickets" asp-action="Index">Квитки</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" asp-controller="Venues" asp-action="Index">Локації</a>
                         </li>
                     </ul>
+
                     <ul class="navbar-nav ms-auto">
                         @if (User.Identity.IsAuthenticated)
                         {
-                            <li class="nav-item">
+                            <li class="nav-item d-flex align-items-center">
                                 <span class="nav-link text-dark">
                                     Привіт, <strong>@User.Identity.Name</strong>!
                                     @if (User.IsInRole("Admin"))
@@ -84,6 +89,7 @@
                                         <span class="badge bg-danger ms-1">Адмін</span>
                                     }
                                 </span>
+                                <a asp-controller="Account" asp-action="ChangePassword" class="nav-link text-info" style="font-size: 0.8rem;">(Змінити пароль)</a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link text-danger" asp-controller="Account" asp-action="Logout">Вийти</a>

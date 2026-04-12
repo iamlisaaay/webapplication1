@@ -35,7 +35,8 @@ public partial class Customer
     public string Password { get; set; } = null!;
 
     [Display(Name = "Чи є Адміном?")]
-    public bool IsAdmin { get; set; } = false; 
-
+    public bool IsAdmin { get; set; } = false;
+    public string? ResetPasswordToken { get; set; }
+    public DateTime? ResetPasswordTokenExpiry { get; set; }
     public virtual ICollection<Ticket> Tickets { get; set; } = new List<Ticket>();
 }
