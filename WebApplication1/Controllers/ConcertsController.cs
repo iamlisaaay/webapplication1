@@ -36,6 +36,7 @@ namespace Concert.Controllers
         public IActionResult RevenueChart() => View();
 
         // GET: Concerts/Details/5
+        // GET: Concerts/Details/5
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null) return NotFound();
@@ -43,6 +44,8 @@ namespace Concert.Controllers
             var concert = await _context.Concerts
                 .Include(c => c.Venue)
                 .Include(c => c.Groups)
+                .Include(c => c.Comments)                 // ДОДАЛИ: Підвантажуємо коментарі
+                    .ThenInclude(com => com.Customer)     // ДОДАЛИ: Підвантажуємо авторів коментарів, щоб вивести ім'я
                 .FirstOrDefaultAsync(m => m.ConcertId == id);
 
             if (concert == null) return NotFound();

@@ -35,11 +35,9 @@ namespace Concert.Controllers
 
         public async Task<IActionResult> Details(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
+            // 1. Отримуємо групу з усіма зв'язками
             var @group = await _context.Groups
                 .Include(g => g.Concerts)
                     .ThenInclude(c => c.Venue)
@@ -47,10 +45,18 @@ namespace Concert.Controllers
                     .ThenInclude(m => m.RoleNavigation)
                 .FirstOrDefaultAsync(m => m.GroupId == id);
 
-            if (@group == null)
-            {
-                return NotFound();
-            }
+            if (@group == null) return NotFound();
+
+            // 2. Отримуємо коментарі до ВСІХ концертів, де брав участь цей гурт
+            var comments = await _context.Comments
+                .Include(c => c.Customer)
+                .Include(c => c.Concert)
+                .Where(c => c.Concert.Groups.Any(g => g.GroupId == id))
+                .OrderByDescending(c => c.CreatedAt)
+                .ToListAsync();
+
+            // 3. Передаємо коментарі у View через ViewBag або ViewModel
+            ViewBag.GroupComments = comments;
 
             return View(@group);
         }

@@ -28,6 +28,8 @@ public partial class ConcertContext : DbContext
     public virtual DbSet<Ticket> Tickets { get; set; }
 
     public virtual DbSet<Venue> Venues { get; set; }
+    public virtual DbSet<Comment> Comments { get; set; }
+
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
@@ -89,6 +91,21 @@ public partial class ConcertContext : DbContext
                 .HasPrecision(5, 2)
                 .HasDefaultValue(0m)
                 .HasColumnName("loyalty_discount");
+        });
+        modelBuilder.Entity<Comment>(entity =>
+        {
+            entity.HasKey(e => e.CommentId);
+            entity.ToTable("comments");
+
+            entity.HasOne(d => d.Customer)
+                .WithMany() // Це залишається порожнім, бо у Customer поки немає списку коментарів
+                .HasForeignKey(d => d.CustomerId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(d => d.Concert)
+                .WithMany(p => p.Comments) // <--- ОСЬ ЦЕ ГОЛОВНЕ! (Додай p => p.Comments)
+                .HasForeignKey(d => d.ConcertId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<Group>(entity =>

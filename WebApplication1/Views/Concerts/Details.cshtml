@@ -270,11 +270,125 @@
             </div>
         }
     </div>
+    <div class="mb-5 p-4 rounded-4" style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1);">
+        @if (User.Identity != null && User.Identity.IsAuthenticated)
+        {
+            <form asp-controller="Comments" asp-action="Create" method="post">
+                <input type="hidden" name="concertId" value="@Model.ConcertId" />
+                <div class="mb-3">
+                    <label for="commentText" class="form-label text-white-50 text-uppercase" style="letter-spacing: 1px; font-size: 0.8rem;">Залиште свій відгук</label>
+                    <textarea id="commentText" name="text" class="form-control text-white border-secondary shadow-none" rows="3" placeholder="Як вам концерт?..." required style="background: rgba(0,0,0,0.3);"></textarea>
+                </div>
+                <div class="text-end">
+                    <button type="submit" class="btn btn-outline-info text-uppercase px-4" style="letter-spacing: 2px; font-weight: 700;">
+                        Відправити
+                    </button>
+                </div>
+            </form>
+        }
+        else
+        {
+            <div class="text-center py-3">
+                <p class="text-white-50 mb-2">Щоб залишити коментар, потрібно увійти в систему.</p>
+                <a asp-controller="Account" asp-action="Login" class="btn btn-outline-light btn-sm text-uppercase" style="letter-spacing: 1px;">Увійти</a>
+            </div>
+        }
+    </div>
+   <div class="comments-list">
+    @if (Model.Comments != null && Model.Comments.Any())
+    {
+        // Отримуємо ID поточного користувача для перевірки прав
+        var currentUserId = User.FindFirst("UserId")?.Value;
+        var isAdmin = User.IsInRole("Admin");
+
+        @foreach (var comment in Model.Comments.OrderByDescending(c => c.CreatedAt))
+        {
+            <div class="card mb-3 border-0 rounded-4 shadow-sm" style="background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(5px);">
+                <div class="card-body p-4 text-white">
+                    <div class="d-flex justify-content-between align-items-center border-bottom border-secondary mb-3 pb-2">
+                        
+                        <div class="d-flex align-items-center gap-3">
+                            <img src="@(!string.IsNullOrEmpty(comment.Customer?.AvatarUrl) ? comment.Customer.AvatarUrl : "/images/default-avatar.png")"
+                                 alt="Avatar"
+                                 class="rounded-circle object-fit-cover"
+                                 style="width: 45px; height: 45px; border: 2px solid rgba(96, 165, 250, 0.5);"
+                                 onerror="this.src='/images/default-avatar.png';">
+                            <h6 class="mb-0 fw-bold text-info" style="letter-spacing: 1px;">
+                                @(comment.Customer?.FullName ?? "Невідомий користувач")
+                            </h6>
+                        </div>
+
+                        <small class="text-white-50" style="font-size: 0.8rem;">
+                            @comment.CreatedAt.ToString("dd.MM.yyyy HH:mm")
+                        </small>
+                    </div>
+
+                    <p id="comment-text-@comment.CommentId" class="card-text mb-0" style="line-height: 1.6; font-weight: 300;">
+                        @comment.Text
+                    </p>
+
+                    <form id="edit-form-@comment.CommentId" asp-controller="Comments" asp-action="Edit" method="post" class="d-none mt-3">
+                        <input type="hidden" name="commentId" value="@comment.CommentId" />
+                        <input type="hidden" name="concertId" value="@Model.ConcertId" />
+                        <textarea name="newText" class="form-control text-white mb-2" style="background: rgba(0,0,0,0.5); border: 1px solid #60a5fa;" rows="2">@comment.Text</textarea>
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-sm btn-success px-3">Зберегти</button>
+                            <button type="button" class="btn btn-sm btn-outline-light px-3" onclick="toggleEdit(@comment.CommentId)">Скасувати</button>
+                        </div>
+                    </form>
+
+                    @if (currentUserId == comment.CustomerId.ToString() || isAdmin)
+                    {
+                        <div class="d-flex justify-content-end gap-3 mt-3 pt-2" style="border-top: 1px dashed rgba(255,255,255,0.1);">
+                            
+                            @if (currentUserId == comment.CustomerId.ToString())
+                            {
+                                <button type="button" class="btn btn-sm text-info p-0 text-uppercase" style="letter-spacing: 1px; font-size: 0.75rem; background: none; border: none;" onclick="toggleEdit(@comment.CommentId)">
+                                    ✏️ Редагувати
+                                </button>
+                            }
+
+                            <form asp-controller="Comments" asp-action="Delete" method="post" onsubmit="return confirm('Ви впевнені, що хочете видалити цей коментар?');" class="m-0 p-0">
+                                <input type="hidden" name="commentId" value="@comment.CommentId" />
+                                <input type="hidden" name="concertId" value="@Model.ConcertId" />
+                                <button type="submit" class="btn btn-sm text-danger p-0 text-uppercase" style="letter-spacing: 1px; font-size: 0.75rem; background: none; border: none;">
+                                    🗑 Видалити
+                                </button>
+                            </form>
+                        </div>
+                    }
+
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="text-center py-4">
+            <p class="text-white-50 fst-italic fs-5 mb-0">Ще немає коментарів. Ваш буде першим!</p>
+        </div>
+    }
+</div>
 
 </div>
 
 @section Scripts {
     <script>
+        // Функція для перемикання форми редагування
+        function toggleEdit(commentId) {
+            var textElement = document.getElementById('comment-text-' + commentId);
+            var formElement = document.getElementById('edit-form-' + commentId);
+            
+            if (formElement.classList.contains('d-none')) {
+                formElement.classList.remove('d-none');
+                textElement.classList.add('d-none');
+            } else {
+                formElement.classList.add('d-none');
+                textElement.classList.remove('d-none');
+            }
+        }
+
+        // Твій існуючий код для 3D карток
         document.querySelectorAll('.holographic-card').forEach(card => {
             const inner = card.querySelector('.holographic-card__inner');
 

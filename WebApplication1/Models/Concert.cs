@@ -24,14 +24,15 @@ public partial class Concert
 
     [Display(Name = "Веню")]
     public int? VenueId { get; set; }
-    
+
 
     public virtual ICollection<Ticket> Tickets { get; set; } = new List<Ticket>();
     [Display(Name = "Веню")]
     [Required(ErrorMessage = "Поле не повинне бути порожнім")]
     public virtual Venue? Venue { get; set; }
     [Display(Name = "Посилання на афішу")]
-   
+
     public string? ImageUrl { get; set; }
+    public virtual ICollection<Comment> Comments { get; set; } = new List<Comment>();
     public virtual ICollection<Group> Groups { get; set; } = new List<Group>();
 }
