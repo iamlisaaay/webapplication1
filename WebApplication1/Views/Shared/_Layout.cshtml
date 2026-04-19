@@ -1,4 +1,8 @@
-﻿<!DOCTYPE html>
+﻿@using Microsoft.AspNetCore.Identity
+@inject Concert.Services.IUserService UserService
+
+
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -11,28 +15,27 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;700;900&display=swap" rel="stylesheet">
 
     <style>
-        /* Стилізація навбару під твій дизайн */
-        .custom-navbar {
-            background-color: #040721 !important;
-            font-family: 'Montserrat', sans-serif;
-            border-bottom: 1px solid rgba(255,255,255,0.1) !important;
-        }
-
-            .custom-navbar .nav-link, .custom-navbar .navbar-brand {
-                color: white !important;
-                text-transform: uppercase;
-                letter-spacing: 1px;
-                font-size: 0.8rem;
+            /* Стилізація навбару під твій дизайн */
+            .custom-navbar {
+                background-color: #040721 !important;
+                font-family: 'Montserrat', sans-serif;
+                border-bottom: 1px solid rgba(255,255,255,0.1) !important;
             }
 
-                .custom-navbar .nav-link:hover {
-                    color: #60a5fa !important;
+                .custom-navbar .nav-link, .custom-navbar .navbar-brand {
+                    color: white !important;
+                    text-transform: uppercase;
+                    letter-spacing: 1px;
+                    font-size: 0.8rem;
                 }
+
+                    .custom-navbar .nav-link:hover {
+                        color: #60a5fa !important;
+                    }
     </style>
 </head>
 <body>
     <header>
-        @* Змінили класи navbar-light та bg-white на наші кастомні *@
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-dark custom-navbar box-shadow">
             <div class="container-fluid">
                 <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">ConcertApp</a>
@@ -81,27 +84,28 @@
                     <ul class="navbar-nav ms-auto">
                         @if (User.Identity.IsAuthenticated)
                         {
-                            <li class="nav-item d-flex align-items-center">
-                                <span class="nav-link text-dark">
-                                    Привіт, <strong>@User.Identity.Name</strong>!
-                                    @if (User.IsInRole("Admin"))
-                                    {
-                                        <span class="badge bg-danger ms-1">Адмін</span>
-                                    }
-                                </span>
-                                <a asp-controller="Account" asp-action="ChangePassword" class="nav-link text-info" style="font-size: 0.8rem;">(Змінити пароль)</a>
-                            </li>
+                            // 1. Отримуємо URL аватарки "на льоту"
+                            var avatarUrl = await UserService.GetAvatarUrlAsync(User.Identity.Name);
+
                             <li class="nav-item">
-                                <a class="nav-link text-danger" asp-controller="Account" asp-action="Logout">Вийти</a>
+                                <a class="nav-link d-flex align-items-center" asp-controller="Account" asp-action="Profile" style="text-transform: none; font-size: 0.9rem; font-weight: 600;">
+                                    
+                                    <img src="@(string.IsNullOrEmpty(avatarUrl) ? "/images/default-avatar.png" : avatarUrl)"
+                                         class="navbar-avatar"
+                                         alt="Avatar"
+                                         onerror="this.onerror=null; this.src='/images/default-avatar.png';">
+                                         
+                                    @User.Identity.Name
+                                </a>
                             </li>
                         }
                         else
                         {
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-controller="Account" asp-action="Login">Увійти</a>
+                                <a class="nav-link" asp-controller="Account" asp-action="Login">Увійти</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link text-primary" asp-controller="Account" asp-action="Register">Реєстрація</a>
+                                <a class="nav-link text-info" asp-controller="Account" asp-action="Register">Реєстрація</a>
                             </li>
                         }
                     </ul>
@@ -109,7 +113,6 @@
             </div>
         </nav>
     </header>
-
 
     <main role="main">
         @RenderBody()

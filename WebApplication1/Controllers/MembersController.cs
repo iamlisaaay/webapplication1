@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Concert.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Concert.Controllers
 {
@@ -18,17 +19,15 @@ namespace Concert.Controllers
             _context = context;
         }
 
-        // GET: Members
         public async Task<IActionResult> Index()
         {
             var concertContext = _context.Members
                 .Include(m => m.RoleNavigation)
-                .Include(m => m.Groups); 
+                .Include(m => m.Groups);
 
             return View(await concertContext.ToListAsync());
         }
 
-        // GET: Members/Details/5
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -47,21 +46,18 @@ namespace Concert.Controllers
             return View(member);
         }
 
-        // GET: Members/Create
+        [Authorize(Roles = "Admin")]
         public IActionResult Create()
         {
             ViewData["Role"] = new SelectList(_context.Roles, "RoleId", "RoleName");
             return View();
         }
 
-        // POST: Members/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create([Bind("MemberId,FullName,Role,ImageUrl,InstagramUrl")] Member member)
         {
-        
             ModelState.Remove("RoleNavigation");
             ModelState.Remove("Groups");
 
@@ -72,12 +68,11 @@ namespace Concert.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-           
             ViewData["Role"] = new SelectList(_context.Roles, "RoleId", "RoleName", member.Role);
             return View(member);
         }
 
-        // GET: Members/Edit/5
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -94,11 +89,9 @@ namespace Concert.Controllers
             return View(member);
         }
 
-        // POST: Members/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Edit(int id, [Bind("MemberId,FullName,Role,ImageUrl,InstagramUrl")] Member member)
         {
             ModelState.Remove("RoleNavigation");
@@ -132,7 +125,7 @@ namespace Concert.Controllers
             return View(member);
         }
 
-        // GET: Members/Delete/5
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -151,34 +144,27 @@ namespace Concert.Controllers
             return View(member);
         }
 
-        // POST: Members/Delete/5
-        
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-
             var member = await _context.Members
                 .Include(m => m.Groups)
-                    .ThenInclude(g => g.Members) 
+                    .ThenInclude(g => g.Members)
                 .FirstOrDefaultAsync(m => m.MemberId == id);
 
             if (member != null)
             {
-             
                 foreach (var group in member.Groups.ToList())
                 {
-               
                     if (group.Members.Count <= 1)
                     {
-                      
                         _context.Groups.Remove(group);
                     }
                 }
 
-             
                 _context.Members.Remove(member);
-
                 await _context.SaveChangesAsync();
             }
 
@@ -189,10 +175,11 @@ namespace Concert.Controllers
         {
             return _context.Members.Any(e => e.MemberId == id);
         }
+
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> CreateAjax(Member member)
         {
-          
             ModelState.Remove("RoleNavigation");
             ModelState.Remove("Groups");
 
@@ -201,7 +188,6 @@ namespace Concert.Controllers
                 _context.Add(member);
                 await _context.SaveChangesAsync();
 
-       
                 return Json(new { success = true, id = member.MemberId, name = member.FullName });
             }
 

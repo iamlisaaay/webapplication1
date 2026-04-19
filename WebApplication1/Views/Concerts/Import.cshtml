@@ -2,39 +2,156 @@
     ViewData["Title"] = "Імпорт концертів";
 }
 
-<h1>Імпорт концертів з Excel</h1>
-
-@if (ViewBag.Errors != null)
-{
-    // Приводимо до потрібного типу
-    var errors = ViewBag.Errors as List<Concert.Models.ImportError>;
-    if (errors != null && errors.Any())
-    {
-        <div class="alert alert-danger mt-3">
-            <h4 class="alert-heading">Під час імпорту виникли помилки!</h4>
-            <p>Наступні рядки не були додані до бази даних. Будь ласка, виправте ці помилки в своєму Excel-файлі та завантажте ці рядки ще раз:</p>
-            <hr>
-            <ul class="mb-0">
-                @foreach (var error in errors)
-                {
-                    <li><strong>Рядок @error.RowNumber (@error.ConcertTitle):</strong> @error.ErrorMessage</li>
-                }
-            </ul>
-        </div>
+<style>
+    .import-card {
+        background: rgba(30, 41, 59, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 1.5rem;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        color: white;
     }
-}
+    .custom-input {
+        background-color: rgba(0, 0, 0, 0.2) !important;
+        color: white !important;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    .custom-label {
+        color: rgba(255, 255, 255, 0.6);
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 1px;
+        margin-bottom: 0.5rem;
+    }
+    .page-title {
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 3px;
+        text-shadow: 0 0 20px rgba(255,255,255,0.2);
+        color: white;
+    }
+    .dark-alert {
+        background: rgba(239, 68, 68, 0.15);
+        border: 1px solid rgba(248, 113, 113, 0.3);
+        color: #fca5a5;
+        border-radius: 1rem;
+    }
+    .dark-alert hr {
+        border-color: rgba(248, 113, 113, 0.2);
+    }
+    .custom-file-input::-webkit-file-upload-button {
+        visibility: hidden;
+        width: 0;
+    }
+    .custom-file-input::before {
+        content: '📁 ОБРАТИ ФАЙЛ';
+        display: inline-block;
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.2);
+        border-radius: 5px;
+        padding: 6px 12px;
+        outline: none;
+        white-space: nowrap;
+        cursor: pointer;
+        color: white;
+        font-weight: 600;
+        font-size: 0.75rem;
+        letter-spacing: 1px;
+        transition: 0.3s;
+    }
+    .custom-file-input:hover::before {
+        background: rgba(255,255,255,0.1);
+        border-color: rgba(255,255,255,0.5);
+    }
+    
+    /* Новий стиль для іконки-підказки */
+    .help-icon {
+        display: inline-block;
+        width: 18px;
+        height: 18px;
+        line-height: 16px;
+        text-align: center;
+        border-radius: 50%;
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        font-size: 12px;
+        cursor: help;
+        margin-left: 8px;
+        color: rgba(255, 255, 255, 0.7);
+        transition: 0.2s;
+    }
+    .help-icon:hover {
+        color: white;
+        border-color: white;
+        background: rgba(255,255,255,0.1);
+    }
+</style>
 
-<div class="row mt-4">
-    <div class="col-md-4">
-        <form asp-action="Import" enctype="multipart/form-data">
-            <div class="form-group">
-                <label class="control-label">Оберіть Excel файл для імпорту</label>
-                <input type="file" name="fileExcel" class="form-control" accept=".xlsx" required />
+<div class="container py-5">
+    <h1 class="page-title mb-4">Імпорт концертів з Excel</h1>
+
+    @if (ViewBag.Errors != null)
+    {
+        var errors = ViewBag.Errors as List<Concert.Models.ImportError>;
+        if (errors != null && errors.Any())
+        {
+            <div class="alert dark-alert mt-3 shadow-lg p-4">
+                <h4 class="alert-heading fw-bold" style="letter-spacing: 1px;">⚠️ Під час імпорту виникли помилки!</h4>
+                <p class="mb-3" style="font-size: 0.9rem; opacity: 0.9;">Наступні рядки не були додані до бази даних. Будь ласка, виправте ці помилки в своєму Excel-файлі та завантажте ці рядки ще раз:</p>
+                <hr>
+                <ul class="mb-0" style="font-size: 0.85rem;">
+                    @foreach (var error in errors)
+                    {
+                        <li class="mb-2">
+                            <strong class="text-white">Рядок @error.RowNumber (@error.ConcertTitle):</strong> 
+                            
+                            @if (error.ErrorMessage.ToLower().Contains("дат"))
+                            {
+                                @error.ErrorMessage
+                                
+                                <span class="help-icon"
+                                      data-bs-toggle="tooltip" 
+                                      data-bs-placement="top" 
+                                      title="Приклад правильного формату: 28.03.2026 18:00:00">
+                                    ?
+                                </span>
+                            }
+                            else
+                            {
+                                @error.ErrorMessage
+                            }
+                        </li>
+                    }
+                </ul>
             </div>
-            <div class="form-group mt-3">
-                <input type="submit" value="Завантажити" class="btn btn-primary" />
-                <a asp-action="Index" class="btn btn-secondary">Назад до списку</a>
+        }
+    }
+
+    <div class="row mt-5">
+        <div class="col-md-5">
+            <div class="import-card p-4 p-md-5">
+                <form asp-action="Import" enctype="multipart/form-data">
+                    <div class="form-group mb-4">
+                        <label class="control-label custom-label">Оберіть Excel файл</label>
+                        <input type="file" name="fileExcel" class="form-control custom-input custom-file-input" accept=".xlsx" required />
+                    </div>
+                    <div class="form-group d-flex gap-3 mt-4">
+                        <button type="submit" class="btn btn-outline-info text-uppercase flex-grow-1" style="letter-spacing: 1px; font-weight: 600;">Завантажити</button>
+                        <a asp-action="Index" class="btn btn-outline-secondary text-uppercase" style="letter-spacing: 1px;">Скасувати</a>
+                    </div>
+                </form>
             </div>
-        </form>
+        </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+          
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+        });
+    </script>
+}

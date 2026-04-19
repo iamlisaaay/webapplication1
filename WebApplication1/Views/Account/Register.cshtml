@@ -3,54 +3,85 @@
     ViewData["Title"] = "Реєстрація";
 }
 
-<div class="row justify-content-center mt-5">
-    <div class="col-md-6">
-        <h2 class="text-center mb-4">Створити акаунт</h2>
-        <div class="card shadow-sm">
-            <div class="card-body">
-                <form asp-action="Register" method="post">
-                    <div class="form-group mb-3">
-                        <label asp-for="FullName" class="control-label"></label>
-                        <input asp-for="FullName" class="form-control" />
-                        <span asp-validation-for="FullName" class="text-danger"></span>
-                    </div>
-                    <div class="form-group mb-3">
-                        <label asp-for="Email" class="control-label"></label>
-                        <input asp-for="Email" class="form-control" />
-                        <span asp-validation-for="Email" class="text-danger"></span>
-                    </div>
-               
+<style>
+    .auth-card {
+        background: rgba(30, 41, 59, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 1.5rem;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        color: white;
+    }
+    .custom-input {
+        background-color: rgba(0, 0, 0, 0.2) !important;
+        color: white !important;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    .custom-input:focus {
+        border-color: #3b82f6;
+        box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+    }
+    .custom-label {
+        color: rgba(255, 255, 255, 0.6);
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 1px;
+    }
+    .page-title {
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 3px;
+        text-shadow: 0 0 20px rgba(255,255,255,0.2);
+    }
+</style>
 
-                    <div class="form-group mb-3">
-                        <label asp-for="BirthDate" class="control-label">Дата народження</label>
-                        <input asp-for="BirthDate" class="form-control" type="date" />
-                        <span asp-validation-for="BirthDate" class="text-danger"></span>
-                    </div>
+<div class="row justify-content-center mt-5 py-4">
+    <div class="col-md-6 col-lg-5">
+        <h2 class="text-center mb-4 page-title text-white">Створити акаунт</h2>
+        <div class="auth-card p-4 p-md-5">
+            <form asp-action="Register" method="post">
+                <div class="form-group mb-3">
+                    <label asp-for="FullName" class="control-label custom-label"></label>
+                    <input asp-for="FullName" class="form-control custom-input" />
+                    <span asp-validation-for="FullName" class="text-danger small"></span>
+                </div>
+                
+                <div class="form-group mb-3">
+                    <label asp-for="Email" class="control-label custom-label"></label>
+                    <input asp-for="Email" class="form-control custom-input" />
+                    <span asp-validation-for="Email" class="text-danger small"></span>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label asp-for="BirthDate" class="control-label custom-label">Дата народження</label>
+                    <input asp-for="BirthDate" class="form-control custom-input" type="date" />
+                    <span asp-validation-for="BirthDate" class="text-danger small"></span>
+                </div>
+        
+                <div class="form-group mb-3">
+                    <label asp-for="Password" class="control-label custom-label"></label>
+                    <input asp-for="Password" class="form-control custom-input" />
+                    <span asp-validation-for="Password" class="text-danger small"></span>
+                </div>
+                
+                <div class="form-group mb-4">
+                    <label asp-for="ConfirmPassword" class="control-label custom-label">Підтвердження пароля</label>
+                    <input asp-for="ConfirmPassword" class="form-control custom-input" />
+                    <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
+                </div>
+                
+                <div class="d-grid gap-2 mt-4">
+                    <button type="submit" class="btn btn-outline-info text-uppercase" style="letter-spacing: 1px; font-weight: 600;">Зареєструватися</button>
+                </div>
+            </form>
             
-                    <div class="form-group mb-3">
-                        <label asp-for="Password" class="control-label"></label>
-                        <input asp-for="Password" class="form-control" />
-                        <span asp-validation-for="Password" class="text-danger"></span>
-                    </div>
-                    <div class="form-group mb-4">
-                        <label asp-for="ConfirmPassword" class="control-label">Підтвердження пароля</label>
-                        <input asp-for="ConfirmPassword" class="form-control" />
-                        <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
-                    </div>
-                    <div class="d-grid gap-2">
-                        <button type="submit" class="btn btn-primary">Зареєструватися</button>
-                    </div>
-                </form>
+            <div class="text-center mt-4">
+                <a asp-action="Login" class="text-info text-decoration-none" style="font-size: 0.85rem; letter-spacing: 1px;">Вже є акаунт? Увійти</a>
             </div>
-        </div>
-        <div class="text-center mt-3">
-            <a asp-action="Login">Вже є акаунт? Увійти</a>
         </div>
     </div>
 </div>
 
 @section Scripts {
-    @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial");
-    }
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
 }

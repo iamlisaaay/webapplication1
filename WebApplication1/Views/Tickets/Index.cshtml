@@ -20,6 +20,14 @@
         letter-spacing: 5px;
         text-shadow: 0 0 20px rgba(255,255,255,0.2);
     }
+    /* Ефект світіння для посилань */
+    .hover-glow {
+        transition: 0.3s;
+    }
+    .hover-glow:hover {
+        color: #60a5fa !important;
+        text-shadow: 0 0 8px rgba(96, 165, 250, 0.6);
+    }
 
     .table-container {
         background: rgba(30, 41, 59, 0.6);
@@ -128,7 +136,11 @@
                 @foreach (var item in Model)
                 {
                     <tr>
-                        <td class="fw-bold text-uppercase" style="font-size: 0.85rem; letter-spacing: 1px;">@Html.DisplayFor(modelItem => item.Concert.Title)</td>
+                        <td class="fw-bold text-uppercase" style="font-size: 0.85rem; letter-spacing: 1px;">
+    <a asp-controller="Concerts" asp-action="Details" asp-route-id="@item.ConcertId" class="text-white text-decoration-none hover-glow">
+        @item.Concert.Title
+    </a>
+</td>
                         <td>@Html.DisplayFor(modelItem => item.Customer.FullName)</td>
                         <td class="text-white-50">Ряд @Html.DisplayFor(modelItem => item.RNumber), Місце @Html.DisplayFor(modelItem => item.SeatNumber)</td>
                         <td class="fw-bold" style="color: #d4a373;">@Html.DisplayFor(modelItem => item.Price) ₴</td>

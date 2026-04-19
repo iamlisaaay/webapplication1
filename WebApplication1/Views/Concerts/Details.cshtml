@@ -50,6 +50,14 @@
         letter-spacing: 5px;
         text-shadow: 0 0 20px rgba(255,255,255,0.2);
     }
+    /* Еффект світіння для посилань */
+    .hover-glow {
+        transition: 0.3s;
+    }
+    .hover-glow:hover {
+        color: #60a5fa !important;
+        text-shadow: 0 0 8px rgba(96, 165, 250, 0.6);
+    }
 
     /* === БЕЙДЖІ СТАТУСУ === */
     .status-badge {
@@ -198,17 +206,27 @@
             <h3 class="section-title">Місце проведення</h3>
 
             <div class="venue-card">
-                <img src="@Url.Content(!string.IsNullOrEmpty(Model.Venue?.ImageUrl) ? Model.Venue.ImageUrl : "/images/default-venue.jpg")"
-                     alt="@Model.Venue?.Name"
-                     class="venue-img"
-                     onerror="this.src='/images/default-venue.jpg';">
+                <a asp-controller="Venues" asp-action="Details" asp-route-id="@Model.VenueId">
+                    <img src="@Url.Content(!string.IsNullOrEmpty(Model.Venue?.ImageUrl) ? Model.Venue.ImageUrl : "/images/default-venue.jpg")"
+                         alt="@Model.Venue?.Name"
+                         class="venue-img"
+                         onerror="this.src='/images/default-venue.jpg';">
+                </a>
 
                 <div class="p-4">
-                    <h4 class="fw-bold text-uppercase mb-1" style="letter-spacing: 2px;">@Model.Venue?.Name</h4>
+                    <h4 class="fw-bold text-uppercase mb-1" style="letter-spacing: 2px;">
+                        <a asp-controller="Venues" asp-action="Details" asp-route-id="@Model.VenueId" class="text-white text-decoration-none hover-glow">
+                            @Model.Venue?.Name
+                        </a>
+                    </h4>
                     @if (!string.IsNullOrEmpty(Model.Venue?.Address))
                     {
                         <p class="text-white-50 mb-0">📍 @Model.Venue.Address</p>
                     }
+                    
+                    <a asp-controller="Venues" asp-action="Details" asp-route-id="@Model.VenueId" class="btn btn-sm btn-outline-info mt-3 text-uppercase" style="letter-spacing: 1px; font-size: 0.75rem;">
+                        Детальніше про локацію
+                    </a>
                 </div>
             </div>
         </div>

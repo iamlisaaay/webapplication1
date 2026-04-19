@@ -183,4 +183,77 @@ public class AccountController : Controller
 
         return RedirectToAction("Index", "Home");
     }
+    // 1. Сторінка профілю
+    [Authorize]
+    public async Task<IActionResult> Profile()
+    {
+        var userId = int.Parse(User.FindFirstValue("UserId"));
+        var user = await _context.Customers.FindAsync(userId);
+        return View(user);
+    }
+
+    // 2. Редагування даних (GET)
+    [Authorize]
+    public async Task<IActionResult> EditProfile()
+    {
+        var userId = int.Parse(User.FindFirstValue("UserId"));
+        var user = await _context.Customers.FindAsync(userId);
+
+        var model = new EditProfileViewModel
+        {
+            FullName = user.FullName,
+            Email = user.Email,
+            BirthDate = user.BirthDate
+        };
+        return View(model);
+    }
+
+    // 3. Редагування даних (POST)
+    [HttpPost]
+    [Authorize]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> EditProfile(EditProfileViewModel model)
+    {
+        if (!ModelState.IsValid) return View(model);
+
+        var userId = int.Parse(User.FindFirstValue("UserId"));
+        var user = await _context.Customers.FindAsync(userId);
+
+        // Оновлюємо ТІЛЬКИ дозволені поля
+        user.FullName = model.FullName;
+        user.Email = model.Email;
+        user.BirthDate = model.BirthDate;
+
+        await _context.SaveChangesAsync();
+        return RedirectToAction("Profile");
+    }
+
+    // 4. Завантаження аватарки
+    [HttpPost]
+    [Authorize]
+    public async Task<IActionResult> UploadAvatar(IFormFile avatarFile)
+    {
+        if (avatarFile != null && avatarFile.Length > 0)
+        {
+            var userId = int.Parse(User.FindFirstValue("UserId"));
+            var user = await _context.Customers.FindAsync(userId);
+
+        
+            var folderPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images/avatars");
+            if (!Directory.Exists(folderPath)) Directory.CreateDirectory(folderPath);
+
+          
+            var fileName = Guid.NewGuid().ToString() + Path.GetExtension(avatarFile.FileName);
+            var filePath = Path.Combine(folderPath, fileName);
+
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await avatarFile.CopyToAsync(stream);
+            }
+
+            user.AvatarUrl = "/images/avatars/" + fileName;
+            await _context.SaveChangesAsync();
+        }
+        return RedirectToAction("Profile");
+    }
 }

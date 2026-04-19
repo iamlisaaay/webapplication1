@@ -7,15 +7,16 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddTransient<Concert.Services.EmailService>();
 builder.Services.AddControllersWithViews();
+builder.Services.AddScoped<Concert.Services.IUserService, Concert.Services.UserService>(); 
 builder.Services.AddDbContext<ConcertContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddScoped<Concert.Services.IDataPortServiceFactory<Concert.Models.Concert>, Concert.Services.ConcertDataPortServiceFactory>();
-// Налаштування аутентифікації (входу на сайт)
+
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
-        options.LoginPath = "/Account/Login"; // Куди кидати неавторизованих
-        options.AccessDeniedPath = "/Account/AccessDenied"; // Куди кидати, якщо немає прав (наприклад, не адмін)
+        options.LoginPath = "/Account/Login";
+        options.AccessDeniedPath = "/Account/AccessDenied"; 
     });
 var app = builder.Build();
 

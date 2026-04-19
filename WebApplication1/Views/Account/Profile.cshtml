@@ -1,0 +1,125 @@
+﻿@model Concert.Models.Customer
+@{
+    ViewData["Title"] = "Мій профіль";
+}
+
+<style>
+    /* Новий клас тільки для профілю (без 3D ефектів) */
+    .profile-card {
+        background: rgba(30, 41, 59, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 1.5rem;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        color: white;
+    }
+
+    .page-title {
+        font-size: clamp(2rem, 4vw, 3rem);
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 5px;
+        text-shadow: 0 0 20px rgba(255,255,255,0.2);
+    }
+
+    /* Стиль для аватарки */
+    .profile-avatar {
+        width: 180px;
+        height: 180px;
+        object-fit: cover;
+        border: 2px solid rgba(255, 255, 255, 0.1);
+        padding: 5px;
+        background: rgba(0, 0, 0, 0.3);
+    }
+
+    /* Кастомний дизайн для поля вибору файлу */
+    .custom-file-input::-webkit-file-upload-button {
+        visibility: hidden;
+        width: 0;
+    }
+    .custom-file-input::before {
+        content: '📁 ОБРАТИ ФАЙЛ';
+        display: inline-block;
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.2);
+        border-radius: 5px;
+        padding: 6px 12px;
+        outline: none;
+        white-space: nowrap;
+        cursor: pointer;
+        color: white;
+        font-weight: 600;
+        font-size: 0.75rem;
+        letter-spacing: 1px;
+        transition: 0.3s;
+    }
+    .custom-file-input:hover::before {
+        background: rgba(255,255,255,0.1);
+        border-color: rgba(255,255,255,0.5);
+    }
+</style>
+
+<div class="container py-5 mt-4">
+    <h1 class="page-title mb-5 text-center">Особистий кабінет</h1>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="profile-card p-5">
+                <div class="row align-items-center">
+                    
+                    <div class="col-md-4 text-center mb-4 mb-md-0 border-end border-secondary border-opacity-25">
+                        <img src="@(string.IsNullOrEmpty(Model.AvatarUrl) ? "/images/default-avatar.png" : Model.AvatarUrl)"
+                             class="rounded-circle profile-avatar mb-4" alt="Avatar"
+                             onerror="this.src='/images/default-avatar.png';">
+                        
+                        <form asp-action="UploadAvatar" method="post" enctype="multipart/form-data" class="mt-2 px-3">
+                            <input type="file" name="avatarFile" class="form-control form-control-sm mb-3 bg-transparent text-white border-0 custom-file-input shadow-none" accept="image/*" required>
+                            <button type="submit" class="btn btn-sm btn-outline-info w-100 text-uppercase" style="letter-spacing: 1px;">Змінити фото</button>
+                        </form>
+                    </div>
+                    
+                    <div class="col-md-8 ps-md-5">
+                        <h2 class="fw-bold text-uppercase mb-1" style="letter-spacing: 3px;">@Model.FullName</h2>
+                        <p class="text-white-50 mb-4" style="font-size: 0.9rem; letter-spacing: 1px;">@Model.Email</p>
+                        
+                        <hr class="border-secondary opacity-25 mb-4">
+                        
+                        <div class="row mb-5">
+                            <div class="col-6">
+                                <span class="text-white-50 text-uppercase d-block mb-1" style="font-size: 0.75rem; letter-spacing: 1px;">Дата народження</span>
+                                <strong class="fs-5">@(Model.BirthDate?.ToString("dd.MM.yyyy") ?? "Не вказано")</strong>
+                            </div>
+                            <div class="col-6">
+                                <span class="text-white-50 text-uppercase d-block mb-1" style="font-size: 0.75rem; letter-spacing: 1px;">Ваша знижка</span>
+                                <span class="badge" style="background: rgba(34, 197, 94, 0.2); color: #4ade80; border: 1px solid rgba(74, 222, 128, 0.3); padding: 8px 12px; font-size: 1rem; letter-spacing: 1px;">
+                                    @Model.LoyaltyDiscount%
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex flex-wrap gap-3">
+                            <a asp-action="EditProfile" class="btn btn-outline-light text-uppercase px-4 py-2" style="letter-spacing: 1px; font-size: 0.85rem;">
+                                Редагувати профіль
+                            </a>
+                            <a asp-action="ChangePassword" class="btn btn-outline-warning text-uppercase px-4 py-2" style="letter-spacing: 1px; font-size: 0.85rem;">
+                                Змінити пароль
+                            </a>
+                            
+                            <a asp-controller="Account" asp-action="Logout" class="btn btn-outline-danger text-uppercase px-4 py-2" style="letter-spacing: 1px; font-size: 0.85rem;">
+                                Вийти з акаунта
+                            </a>
+
+                            @if (Model.IsAdmin)
+                            {
+                                <span class="badge d-flex align-items-center px-3" style="background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(248, 113, 113, 0.3); text-transform: uppercase; letter-spacing: 1px;">
+                                    Адміністратор
+                                </span>
+                            }
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

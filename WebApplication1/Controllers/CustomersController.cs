@@ -77,19 +77,19 @@ namespace Concert.Controllers
         // POST: Customers/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        // ДОДАНО: IsAdmin (Пароль тут НЕ приймаємо, бо його немає у формі Edit)
+     
         public async Task<IActionResult> Edit(int id, [Bind("CustomerId,FullName,BirthDate,LoyaltyDiscount,Email,IsAdmin")] Customer customer)
         {
             if (id != customer.CustomerId) return NotFound();
 
             ModelState.Remove("Tickets");
-            ModelState.Remove("Password"); // Кажемо системі не сваритися на відсутній пароль
+            ModelState.Remove("Password"); 
 
             if (ModelState.IsValid)
             {
                 try
                 {
-                    // Знаходимо користувача в базі, щоб не втратити його пароль
+                
                     var existingCustomer = await _context.Customers.FindAsync(id);
                     if (existingCustomer == null) return NotFound();
 

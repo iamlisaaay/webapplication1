@@ -66,6 +66,9 @@ namespace Concert.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("CustomerId"));
 
+                    b.Property<string>("AvatarUrl")
+                        .HasColumnType("text");
+
                     b.Property<DateOnly>("BirthDate")
                         .HasColumnType("date")
                         .HasColumnName("birth_date");

@@ -12,7 +12,6 @@ using System.Security.Claims;
 
 namespace Concert.Controllers
 {
-    // Захищаємо весь контролер: доступ мають лише ті, хто увійшов на сайт
     [Authorize]
     public class TicketsController : Controller
     {
@@ -23,15 +22,12 @@ namespace Concert.Controllers
             _context = context;
         }
 
-        // GET: Tickets
         public async Task<IActionResult> Index()
         {
-            // Починаємо формувати запит до бази
             IQueryable<Ticket> ticketsQuery = _context.Tickets
                 .Include(t => t.Concert)
                 .Include(t => t.Customer);
 
-            // ФІЛЬТРАЦІЯ: Якщо це НЕ Адмін, показуємо лише його квитки
             if (!User.IsInRole("Admin"))
             {
                 var userIdStr = User.FindFirstValue("UserId");
@@ -41,14 +37,12 @@ namespace Concert.Controllers
                 }
                 else
                 {
-                    // Якщо ID чомусь не знайдено, не показуємо нічого для безпеки
                     ticketsQuery = ticketsQuery.Where(t => false);
                 }
             }
 
             var tickets = await ticketsQuery.ToListAsync();
 
-            // Статистика для графіка (Адмінам буде цікаво, а звичайним юзерам просто красиво)
             var ticketStats = await _context.Groups
                 .Select(g => new
                 {
@@ -65,7 +59,6 @@ namespace Concert.Controllers
             return View(tickets);
         }
 
-        // GET: Tickets/Details/5
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -83,13 +76,11 @@ namespace Concert.Controllers
                 return NotFound();
             }
 
-            // БЕЗПЕКА: Перевіряємо, чи має право звичайний юзер дивитися цей квиток
             if (!User.IsInRole("Admin"))
             {
                 var userIdStr = User.FindFirstValue("UserId");
                 if (!int.TryParse(userIdStr, out int userId) || ticket.CustomerId != userId)
                 {
-                    // Якщо це чужий квиток — показуємо сторінку "Доступ заборонено"
                     return RedirectToAction("AccessDenied", "Account");
                 }
             }
@@ -97,11 +88,6 @@ namespace Concert.Controllers
             return View(ticket);
         }
 
-        // ====================================================================
-        // ДАЛІ ЙДУТЬ МЕТОДИ, ДОСТУПНІ ТІЛЬКИ АДМІНІСТРАТОРУ
-        // ====================================================================
-
-        // GET: Tickets/Create
         [Authorize(Roles = "Admin")]
         public IActionResult Create()
         {
@@ -110,7 +96,6 @@ namespace Concert.Controllers
             return View();
         }
 
-        // POST: Tickets/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Admin")]
@@ -129,7 +114,6 @@ namespace Concert.Controllers
             return View(ticket);
         }
 
-        // GET: Tickets/Edit/5
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Edit(int? id)
         {
@@ -148,7 +132,6 @@ namespace Concert.Controllers
             return View(ticket);
         }
 
-        // POST: Tickets/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Admin")]
@@ -185,7 +168,6 @@ namespace Concert.Controllers
             return View(ticket);
         }
 
-        // GET: Tickets/Delete/5
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int? id)
         {
@@ -206,7 +188,6 @@ namespace Concert.Controllers
             return View(ticket);
         }
 
-        // POST: Tickets/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Admin")]
@@ -227,7 +208,6 @@ namespace Concert.Controllers
             return _context.Tickets.Any(e => e.TicketId == id);
         }
 
-        // POST: Tickets/ClearAllTickets
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Admin")]
@@ -237,7 +217,6 @@ namespace Concert.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        // POST: Tickets/GenerateTestData
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Admin")]

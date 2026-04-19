@@ -7,7 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-
+using Microsoft.AspNetCore.Authorization;
 namespace Concert.Controllers
 {
     public class ConcertsController : Controller
@@ -51,6 +51,7 @@ namespace Concert.Controllers
         }
 
         // GET: Concerts/Create
+        [Authorize(Roles = "Admin")]
         public IActionResult Create()
         {
             ViewData["VenueId"] = new SelectList(_context.Venues, "VenueId", "Name");
@@ -61,6 +62,8 @@ namespace Concert.Controllers
         // POST: Concerts/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
+
         public async Task<IActionResult> Create([Bind("ConcertId,Title,DateTime,VenueId,ImageUrl")] Models.Concert concert, int[] selectedGroups)
         {
             ModelState.Remove("ImageUrl");
@@ -105,6 +108,7 @@ namespace Concert.Controllers
         }
 
         // GET: Concerts/Edit/5
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
@@ -125,6 +129,7 @@ namespace Concert.Controllers
         // POST: Concerts/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Edit(int id, [Bind("ConcertId,Title,DateTime,VenueId,ImageUrl")] Models.Concert concert, int[] selectedGroups)
         {
             if (id != concert.ConcertId) return NotFound();
@@ -192,6 +197,7 @@ namespace Concert.Controllers
         }
 
         // GET: Concerts/Delete/5
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null) return NotFound();
@@ -208,6 +214,7 @@ namespace Concert.Controllers
         // POST: Concerts/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var concert = await _context.Concerts.FindAsync(id);
@@ -224,8 +231,11 @@ namespace Concert.Controllers
 
         // МЕТОДИ ДЛЯ ІМПОРТУ ТА ЕКСПОРТУ
         [HttpGet]
+        [Authorize(Roles = "Admin")]
+
         public IActionResult Import() => View();
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Import(IFormFile fileExcel, CancellationToken ct)
         {
             if (fileExcel == null || fileExcel.Length == 0) return View();
@@ -246,7 +256,7 @@ namespace Concert.Controllers
             // Якщо помилок немає, йдемо на Index
             return RedirectToAction(nameof(Index));
         }
-
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Export(CancellationToken ct)
         {
             var service = _portFactory.GetExportService("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
